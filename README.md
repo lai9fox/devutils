@@ -8,9 +8,9 @@ DevUtils 是一个面向开发者的在线工具站，聚焦本地处理、即�
 
 - 本地处理优先：输入内容默认在浏览器本地完成计算，不依赖后端服务。
 - 开发者高频工具集合：围绕日常开发中的格式化、转换、校验、生成、解析等场景设计。
-- 快速检索与切换：工具通过统一元数据驱动，便于搜索、导航和扩展。
+- 快速检索与直达：首页搜索、分类和命令面板都由统一工具注册表驱动。
 - 响应式界面：桌面端和移动端都可直接使用。
-- 易于扩展：新增工具只需按约定在 workspace 下增加页面并声明 tool 元数据。
+- 易于扩展：新增工具只需添加工具组件，并在集中注册表与组件映射中声明。
 
 ## 🧰 当前工具
 
@@ -119,12 +119,13 @@ pnpm typecheck
 ```text
 app/
 	components/          通用 UI 组件
+	components/tools/    各个工具实现组件
 	composables/         工具检索与状态管理
+	data/                工具注册表与组件映射
 	layouts/             页面布局
 	pages/
-		index.vue          落地页
-		tools.vue          工具总览页
-		workspace/         各个工具页面
+		index.vue          首页：搜索、分类、工具列表
+		[toolid].vue       工具详情页：根级动态路由
 	types/               类型定义
 public/                静态资源
 ```
@@ -133,11 +134,11 @@ public/                静态资源
 
 新增工具时，遵循当前项目约定：
 
-1. 在 app/pages/workspace 下新增一个 kebab-case 命名的页面文件。
-2. 在页面中通过 definePageMeta 声明 tool 元数据，包括 id、icon、name、description、keywords。
-3. 补充 useSeoMeta，保持页面标题、描述和 og 信息完整。
-4. 尽量保持本地处理，不引入后端依赖。
-5. 复用现有组件和交互模式，例如复制、清空、交换、错误提示等。
+1. 在 `app/components/tools` 下新增一个 kebab-case 命名的工具组件，文件名与工具 id 保持一致。
+2. 在 `app/data/tools.ts` 中新增工具元数据，包括 `id`、`path`、`category`、`icon`、`name`、`description`、`keywords`、`seoTitle`、`seoDescription`、`order` 等字段。
+3. 在 `app/data/tool-components.ts` 中把工具 id 映射到新增组件。
+4. 工具正式访问路径为根级 slug，例如 `/json-formatter`、`/base64-codec`。
+5. 尽量保持本地处理，不引入后端依赖；复用现有组件和交互模式，例如复制、清空、交换、错误提示等。
 
 ## 📄 License
 

@@ -3,6 +3,7 @@
     variant="ghost"
     :color="copied ? 'success' : 'primary'"
     :icon="copied ? 'lucide:check' : 'lucide:copy'"
+    :disabled="!text"
     v-bind="$attrs"
     @click="copyText"
   >

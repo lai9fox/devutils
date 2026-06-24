@@ -1,52 +1,67 @@
-/**
- * 工具管理 Composable
- * 提供工具列表、搜索等功能
- */
 import type { ToolMeta } from '~/types/tool'
+import { getCategoryById, getToolById, tools, toolsByCategory } from '~/data/tools'
 
 export function useTools() {
-  const router = useRouter()
+  const allTools = computed<ToolMeta[]>(() => [...tools].sort((a, b) => a.order - b.order))
+  const groupedTools = computed(() => toolsByCategory)
+  const featuredTools = computed(() => allTools.value.filter(tool => tool.featured))
 
-  // 所有工具列表
-  const tools = computed<ToolMeta[]>(() =>
-    router
-      .getRoutes()
-      .filter(route => route.meta?.tool)
-      .map(route => route.meta.tool as ToolMeta)
-      .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
-  )
-
-  // 搜索工具
   function searchTools(query: string): ToolMeta[] {
-    if (!query || query.trim() === '') {
-      return tools.value
-    }
-
     const q = query.toLowerCase().trim()
+    if (!q) return allTools.value
 
-    return tools.value.filter((tool) => {
-      if (tool.name.toLowerCase().includes(q)) return true
-      if (tool.description.toLowerCase().includes(q)) return true
-      if (tool.id.toLowerCase().includes(q)) return true
-      if (tool.keywords.some(kw => kw.toLowerCase().includes(q))) return true
-      return false
-    })
+    return allTools.value
+      .map(tool => ({ tool, score: scoreTool(tool, q) }))
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score || a.tool.order - b.tool.order)
+      .map(item => item.tool)
   }
 
-  // 获取单个工具
   function getTool(id: string): ToolMeta | undefined {
-    return tools.value.find(tool => tool.id === id)
+    return getToolById(id)
   }
 
-  // 检查工具是否存在
+  function getRelatedTools(tool: ToolMeta, limit = 4): ToolMeta[] {
+    const explicit = (tool.relatedIds ?? [])
+      .map(id => getToolById(id))
+      .filter((item): item is ToolMeta => Boolean(item))
+
+    const sameCategory = allTools.value.filter(item =>
+      item.id !== tool.id
+      && item.category === tool.category
+      && !explicit.some(explicitTool => explicitTool.id === item.id)
+    )
+
+    return [...explicit, ...sameCategory].slice(0, limit)
+  }
+
   function hasToolById(id: string): boolean {
-    return tools.value.some(tool => tool.id === id)
+    return Boolean(getToolById(id))
   }
 
   return {
-    tools,
+    tools: allTools,
+    groupedTools,
+    featuredTools,
     searchTools,
     getTool,
+    getCategoryById,
+    getRelatedTools,
     hasToolById
   }
+}
+
+function scoreTool(tool: ToolMeta, query: string): number {
+  const category = getCategoryById(tool.category)
+  let score = 0
+
+  if (tool.id.toLowerCase() === query) score += 120
+  if (tool.id.toLowerCase().includes(query)) score += 50
+  if (tool.name.toLowerCase().includes(query)) score += 80
+  if (tool.description.toLowerCase().includes(query)) score += 30
+  if (category?.name.toLowerCase().includes(query)) score += 20
+  if (tool.keywords.some(keyword => keyword.toLowerCase() === query)) score += 70
+  if (tool.keywords.some(keyword => keyword.toLowerCase().includes(query))) score += 45
+
+  return score
 }

@@ -5,33 +5,51 @@
  */
 import type { ToolMeta } from '~/types/tool'
 
-defineProps<{
+withDefaults(defineProps<{
   tool: ToolMeta
-}>()
+  compact?: boolean
+}>(), {
+  compact: false
+})
 </script>
 
 <template>
   <NuxtLink
-    :to="'/workspace/' + tool.id"
-    class="group relative flex flex-col gap-3 p-4 rounded-xl border border-default bg-default hover:bg-elevated hover:border-primary-500/50 hover:shadow-lg hover:shadow-primary-500/5 transition-all duration-200 cursor-pointer"
+    :to="tool.path"
+    :class="[
+      'group relative flex min-w-0 flex-col rounded-lg border border-default bg-elevated shadow-sm transition-colors duration-150 hover:border-primary-500/50 hover:bg-primary-500/5 dark:hover:bg-primary-400/10',
+      compact ? 'gap-2 p-3' : 'gap-3 p-4'
+    ]"
   >
-    <!-- 图标 -->
     <div class="flex items-start justify-between">
-      <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary-500/10 text-primary-500 group-hover:bg-primary-500/20 transition-colors">
+      <div
+        :class="[
+          'flex shrink-0 items-center justify-center rounded-md bg-primary-500/15 text-primary-600 transition-colors group-hover:bg-primary-500/20 dark:text-primary-400',
+          compact ? 'size-8' : 'size-10'
+        ]"
+      >
         <UIcon
           :name="tool.icon"
-          class="w-5 h-5"
+          :class="compact ? 'size-4' : 'size-5'"
         />
       </div>
     </div>
 
-    <!-- 名称 -->
-    <h3 class="text-base font-semibold text-default group-hover:text-primary-500 transition-colors">
+    <h3
+      :class="[
+        'truncate font-semibold text-default transition-colors group-hover:text-primary-500',
+        compact ? 'text-sm' : 'text-base'
+      ]"
+    >
       {{ tool.name }}
     </h3>
 
-    <!-- 描述 -->
-    <p class="text-sm text-muted line-clamp-2">
+    <p
+      :class="[
+        'text-muted line-clamp-2',
+        compact ? 'text-xs leading-5' : 'text-sm leading-6'
+      ]"
+    >
       {{ tool.description }}
     </p>
   </NuxtLink>

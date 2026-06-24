@@ -1,27 +1,10 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-/*
- * 预渲染折叠补偿
- * 阻塞脚本在首次绘制前根据 Cookie 给 <html> 加上此 class，
- * 通过 CSS 强制侧边栏折叠态视觉，避免「展开→折叠」闪烁。
- * Vue hydration 完成后由 composable 移除此 class。
- */
-html.sidebar-collapsed-init [data-sidebar] {
-  width: 3.25rem !important;
+html {
+  scroll-behavior: smooth;
 }
-html.sidebar-collapsed-init [data-sidebar-search] {
-  display: none !important;
-}
-html.sidebar-collapsed-init [data-sidebar-toggle] {
-  justify-content: center !important;
-}
-html.sidebar-collapsed-init [data-sidebar-label] {
-  opacity: 0 !important;
-  max-width: 0 !important;
-  margin-left: 0 !important;
-}
-html.sidebar-collapsed-init [data-sidebar],
-html.sidebar-collapsed-init [data-sidebar] * {
-  transition-duration: 0s !important;
+
+body {
+  text-rendering: optimizeLegibility;
 }

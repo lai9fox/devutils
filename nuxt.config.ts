@@ -1,3 +1,12 @@
+import { tools } from './app/data/tools'
+
+const prerenderRoutes = [
+  '/',
+  '/robots.txt',
+  '/sitemap.xml',
+  ...tools.map(tool => tool.path)
+]
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxtjs/sitemap'],
@@ -22,12 +31,6 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.svg' }
-      ],
-      script: [
-        {
-          tagPriority: 'critical',
-          innerHTML: `(function(){try{if(document.cookie.includes('devutils-sidebar-collapsed=true'))document.documentElement.classList.add('sidebar-collapsed-init')}catch(e){}})()`
-        }
       ]
     }
   },
@@ -58,7 +61,7 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       crawlLinks: true,
-      routes: ['/']
+      routes: prerenderRoutes
     }
   },
 
