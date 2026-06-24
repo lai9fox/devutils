@@ -3,11 +3,11 @@
  * CSV / TSV 转换工具
  * 支持 CSV、TSV、JSON 与 Markdown 表格互转
  */
-import Papa from 'papaparse'
-import type { ParseError } from 'papaparse'
+import type { ParseConfig, ParseError } from 'papaparse'
 
 type DelimiterMode = 'auto' | 'comma' | 'tab' | 'semicolon' | 'pipe'
 type OutputMode = 'json' | 'markdown' | 'csv' | 'tsv'
+type PapaRuntime = Pick<typeof import('papaparse'), 'parse' | 'unparse'>
 
 interface ParsedTable {
   rows: string[][]
@@ -26,6 +26,7 @@ const delimiterMode = ref<DelimiterMode>('auto')
 const outputMode = ref<OutputMode>('json')
 const hasHeader = ref(true)
 const skipEmptyLines = ref(true)
+const papa = shallowRef<PapaRuntime | null>(null)
 
 const delimiterOptions: { label: string, value: DelimiterMode }[] = [
   { label: '自动', value: 'auto' },
@@ -74,20 +75,36 @@ function padRow(row: string[], length: number): string[] {
   return Array.from({ length }, (_, index) => row[index] ?? '')
 }
 
-const parsedTable = computed<ParsedTable>(() => {
-  const trimmed = input.value.trim()
-  if (!trimmed) {
-    return { rows: [], dataRows: [], fields: [], delimiter: '', errors: [] }
-  }
+function emptyParsedTable(): ParsedTable {
+  return { rows: [], dataRows: [], fields: [], delimiter: '', errors: [] }
+}
 
-  const config: Papa.ParseConfig<string[]> = {
+async function loadPapa() {
+  const module = await import('papaparse') as unknown as PapaRuntime | { default: PapaRuntime }
+  papa.value = 'default' in module ? module.default : module
+}
+
+if (import.meta.client) {
+  onMounted(() => {
+    void loadPapa()
+  })
+}
+
+const parsedTable = computed<ParsedTable>(() => {
+  const parser = papa.value
+  if (!parser) return emptyParsedTable()
+
+  const trimmed = input.value.trim()
+  if (!trimmed) return emptyParsedTable()
+
+  const config: ParseConfig<string[]> = {
     dynamicTyping: false,
     skipEmptyLines: skipEmptyLines.value ? 'greedy' : false
   }
   const delimiter = selectedDelimiter()
   if (delimiter) config.delimiter = delimiter
 
-  const result = Papa.parse<string[]>(input.value, config)
+  const result = parser.parse<string[]>(input.value, config)
   const rows = result.data.map(row => row.map(normalizeCell))
   const dataRows = hasHeader.value ? rows.slice(1) : rows
   const columnCount = Math.max(maxColumnCount(rows), hasHeader.value ? rows[0]?.length ?? 0 : 0)
@@ -144,11 +161,14 @@ function toMarkdownTable(): string {
 }
 
 function toDelimited(delimiter: string): string {
+  const parser = papa.value
+  if (!parser) return ''
+
   const rows = hasHeader.value
     ? [fields.value, ...dataRows.value.map(row => padRow(row, columnCount.value))]
     : dataRows.value
   if (!rows.length) return ''
-  return Papa.unparse(rows, { delimiter })
+  return parser.unparse(rows, { delimiter })
 }
 
 const output = computed(() => {
