@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToolWorkspace from '../components/workspace/ToolWorkspace.vue';
+import { tools } from '../data/tools';
+import type { ToolMeta } from '../types/tool';
+
+export async function getStaticPaths() {
+  const paths = tools.map((tool) => ({
+    params: { toolId: tool.id },
+    props: { tool }
+  }));
+
+  // 兼容旧版本可能存在的历史路由
+  const legacyAliases = [
+    { oldId: 'json-schema', targetId: 'json-validator' },
+    { oldId: 'json-schema-validator', targetId: 'json-validator' },
+    { oldId: 'json-diff', targetId: 'json-formatter' },
+    { oldId: 'json-escaper', targetId: 'json-formatter' },
+    { oldId: 'json-path-extractor', targetId: 'json-path' }
+  ];
+
+  for (const alias of legacyAliases) {
+    const targetTool = tools.find((t) => t.id === alias.targetId);
+    if (targetTool) {
+      paths.push({
+        params: { toolId: alias.oldId },
+        props: { tool: targetTool }
+      });
+    }
+  }
+
+  return paths;
+}
+
+interface Props {
+  tool: ToolMeta;
+}
+
+const { tool } = Astro.props;
+---
+
+<BaseLayout
+  title={`${tool.seoTitle}`}
+  description={tool.seoDescription}
+  keywords={tool.keywords.join(',')}
+  activeToolId={tool.id}
+  hideFooter={true}
+>
+  <!-- 自由布局工作台：左为工具列表，右为工具内容 -->
+  <ToolWorkspace client:load initialToolId={tool.id} />
+</BaseLayout>

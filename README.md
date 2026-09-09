@@ -1,78 +1,47 @@
-# DevUtils
+# DevUtils · 现代开发者实用工具箱
 
-DevUtils 是一个面向开发者的在线工具站，聚焦本地处理、即开即用和高频小工具场景。项目基于 Nuxt 4 构建，覆盖编码转换、文本处理、时间处理、颜色转换、安全辅助等常见开发需求。
+DevUtils 是一个面向现代开发者的高效在线工具箱，基于 **Astro 5 + Vue 3 孤岛 + Tailwind CSS v4 + CodeMirror 6** 构建，兼顾极致的首屏性能与专业的代码编辑交互。所有运算均在浏览器本地完成，零数据上报，安全隐私。
 
 在线地址：<https://devutils.fox9.dev>
 
-## ✨ 特性
+---
 
-- 本地处理优先：输入内容默认在浏览器本地完成计算，不依赖后端服务。
-- 开发者高频工具集合：围绕日常开发中的格式化、转换、校验、生成、解析等场景设计。
-- 快速检索与直达：首页搜索、分类和命令面板都由统一工具注册表驱动。
-- 响应式界面：桌面端和移动端都可直接使用。
-- 易于扩展：新增工具只需添加工具组件，并在集中注册表与组件映射中声明。
+## ✨ 核心特性
 
-## 🧰 当前工具
+- **100% 浏览器本地运算**：所有解析、修复、Diff 对比、代码生成均在客户端完成，零数据上报，保障开发隐私与安全。
+- **专精深度交互**：告别浅尝辄止，提供格式化智能修复、语义 Diff、Schema 校验与推导、JSONPath 提取、多语言类型生成、多格式互转与转义。
+- **现代化 UI & 自由工作台**：
+  - **首页**：现代极简落地页 + 核心特性介绍 + 实时搜索/分类工具网格。
+  - **工具页**：**自由双栏工作台布局**（左侧常驻/折叠的工具导航列表，右侧宽敞高效的编辑工作区，支持无刷新瞬时切换）。
+- **极速 SSG 静态生成**：基于 Astro 5 静态预渲染，页面毫秒级加载。
+- **快捷键与全局命令面板**：支持 `⌘K` / `Ctrl+K` 全局检索、深浅色模式随心切换。
 
-目前已包含以下工具：
+---
 
-### 编码与格式化
+## 🧰 核心工具列表
 
-- YAML 格式化：YAML 格式化、压缩、校验，以及 YAML 与 JSON 双向转换。
-- JSON 格式化：JSON 格式化、压缩、校验与美化。
-- XML 格式化：XML 格式化、压缩、校验，以及 XML 转 JSON。
-- JSON Schema 校验：使用 JSON Schema 校验 JSON 数据，支持 format、本地 $ref、$defs 与 definitions。
-- CSV / TSV 转换：解析 CSV、TSV、分号或竖线分隔文本，并转换为 JSON、Markdown、CSV、TSV。
-- Base64 编解码：文本 Base64 编码与解码。
-- URL 编解码：支持 encodeURI 和 encodeURIComponent 两种模式。
-- HTML 实体编解码：特殊字符与 HTML 实体互转。
-- Data URI 编解码：文本或文件与 Data URI 互转，支持 MIME、Base64、图片和文本预览。
-- URL / Query 解析：解析完整 URL、相对 URL 或 query string，保留重复参数并输出 JSON。
+| 工具 ID | 工具名称 | 核心亮点 |
+| :--- | :--- | :--- |
+| `json-formatter` | **JSON Formatter** | 格式化 / 美化 / 压缩 JSON：2/4/Tab 缩进美化、单行压缩、未加引号 key 自动修复、移除尾随逗号、文档度量统计。 |
+| `json-validator` | **JSON Validator** | 检查 JSON 是否合法并定位错误：严格 RFC 8259 语法校验、精确行号与列号定位、代码上下文视差指示指针、中文排错建议与一键修复。 |
+| `json-viewer` | **JSON Viewer** | 阅读、折叠、搜索大型 JSON：交互式树形视图、多层级折叠展开控制、全文搜索高亮与命中导航、节点 JSONPath 提取与双栏模式。 |
+| `json-path` | **JSON Path** | 查询 / 提取 JSON 数据：交互式测试 JSONPath 提取表达式（通配符、过滤器、切片与多层级遍历），内置常用语法速查。 |
+| `json-converter` | **JSON Converter** | JSON ↔ YAML / XML / CSV 等：无缝双向互转，保持结构完整并提供格式化输出。 |
+| `json-to-types` | **JSON to Type** | JSON → TypeScript / Java / Go 类型：根据 JSON 自动推断生成 TypeScript、Java (POJO/Record/Lombok)、Go Struct 等类型定义。 |
 
-### 文本与内容处理
-
-- 文本对比：支持逐字、逐词、逐行对比并高亮差异。
-- 文本统计：统计字符数、单词数、行数、段落数和阅读时间。
-- 正则测试器：实时测试正则表达式并展示匹配结果与捕获组。
-- Lorem 生成器：按段落、句子、单词生成占位文本。
-- Unicode 查询：查看字符码点、UTF-8、UTF-16 等编码信息。
-- 大小写转换：在 camelCase、PascalCase、snake_case、kebab-case 等命名风格间转换。
-- JSON 路径提取：用轻量路径表达式从 JSON 中提取字段或数组元素。
-
-### 时间与调度
-
-- 时间戳转换：Unix 时间戳与日期时间互转，支持秒和毫秒。
-- Cron 解析器：将 Cron 表达式解析为自然语言并计算后续执行时间。
-
-### 数值与样式
-
-- 进制转换：二进制、八进制、十进制、十六进制互转。
-- CSS 单位转换：px、rem、em、pt、vw、vh 等单位换算。
-- 颜色转换：HEX、HEX8、RGB、HSL、HSV、CMYK、OKLCH 互转并实时预览。
-
-### 安全与标识
-
-- Hash 摘要：计算文本或文件的 MD5、SHA-1、SHA-256、SHA-384、SHA-512 摘要。
-- JWT 解码器：解析 JWT Header 和 Payload，检查过期时间。
-- 密码生成器：生成可配置长度和字符集的随机密码。
-- UUID 生成器：支持 v1、v3、v4、v5、v6、v7 多版本 UUID 批量生成。
+---
 
 ## 🛠️ 技术栈
 
-- Nuxt 4
-- Vue 3
-- Nuxt UI
-- TailwindCSS v4
-- TypeScript
-- pnpm
-- dayjs
-- diff
-- colord
-- uuid
-- yaml
-- ajv
-- fast-xml-parser
-- papaparse
+- **驱动框架**：Astro 5 (SSG 静态生成)
+- **组件系统**：Vue 3 (`@astrojs/vue`)
+- **编辑器**：CodeMirror 6 (`@codemirror/view`, `@codemirror/state`, `@codemirror/lang-json` 等)
+- **样式体系**：Tailwind CSS v4 (`@tailwindcss/vite`) + 现代设计变量
+- **图标系统**：Lucide (`@lucide/vue`)
+- **核心算法**：`ajv`, `ajv-formats`, `jsonpath-plus`, `yaml`, `fast-xml-parser`, `papaparse`, `diff`
+- **包管理器**：pnpm 10
+
+---
 
 ## 🚀 本地开发
 
@@ -93,7 +62,7 @@ pnpm install
 pnpm dev
 ```
 
-默认访问地址：<http://localhost:3000>
+默认访问地址：<http://localhost:4321>
 
 ### 构建生产版本
 
@@ -107,38 +76,38 @@ pnpm build
 pnpm preview
 ```
 
-### 代码检查
+### 类型检查
 
 ```bash
-pnpm lint
-pnpm typecheck
+pnpm check
 ```
 
-## 📁 项目结构
+---
+
+## 📁 目录结构
 
 ```text
-app/
-	components/          通用 UI 组件
-	components/tools/    各个工具实现组件
-	composables/         工具检索与状态管理
-	data/                工具注册表与组件映射
-	layouts/             页面布局
-	pages/
-		index.vue          首页：搜索、分类、工具列表
-		[toolid].vue       工具详情页：根级动态路由
-	types/               类型定义
-public/                静态资源
+src/
+  components/
+    common/         全局通用组件（Header, CommandPalette, Footer）
+    editor/         基于 CodeMirror 6 的专业代码编辑器组件
+    home/           首页组件（Hero 落地页, ToolGrid 工具网格）
+    tools/          6 大核心 JSON 工具实现组件
+    workspace/      自由布局工作台容器（左侧工具导航 + 右侧工作区）
+  data/             JSON 工具元数据与分类注册表
+  layouts/          基础页面 HTML 骨架（BaseLayout.astro）
+  pages/
+    index.astro     首页（落地页 + 工具网格）
+    [toolId].astro  动态工具页（挂载自由工作台）
+    404.astro       404 容错页
+  styles/           Tailwind v4 与深浅色全局样式（global.css）
+  types/            TypeScript 类型定义
+  utils/            JSON 智能修复、Diff、类型生成、Schema 推导算法
+public/             静态资源（favicon.svg, robots.txt）
+astro.config.mjs    Astro 配置文件
 ```
 
-## ➕ 如何新增工具
-
-新增工具时，遵循当前项目约定：
-
-1. 在 `app/components/tools` 下新增一个 kebab-case 命名的工具组件，文件名与工具 id 保持一致。
-2. 在 `app/data/tools.ts` 中新增工具元数据，包括 `id`、`path`、`category`、`icon`、`name`、`description`、`keywords`、`seoTitle`、`seoDescription`、`order` 等字段。
-3. 在 `app/data/tool-components.ts` 中把工具 id 映射到新增组件。
-4. 工具正式访问路径为根级 slug，例如 `/json-formatter`、`/base64-codec`。
-5. 尽量保持本地处理，不引入后端依赖；复用现有组件和交互模式，例如复制、清空、交换、错误提示等。
+---
 
 ## 📄 License
 

@@ -1,0 +1,78 @@
+---
+import '../styles/global.css';
+import Header from '../components/common/Header.vue';
+import Footer from '../components/common/Footer.astro';
+import { ClientRouter } from 'astro:transitions';
+
+interface Props {
+  title?: string;
+  description?: string;
+  keywords?: string;
+  activeToolId?: string;
+  hideFooter?: boolean;
+}
+
+const {
+  title = 'DevUtils - 现代、简约、本地优先的开发者实用工具箱',
+  description = '专为现代开发者打造的本地优先实用工具箱，提供 JSON 格式化与智能修复、结构化 Diff 比对、Schema 校验推导、JSONPath 提取与代码类型生成等高频工具，本地运算、保护隐私。',
+  keywords = 'DevUtils,开发者工具箱,开发者实用工具,在线工具,JSON格式化,JSON修复,JSON Diff,JSON Schema,JSONPath,JSON转代码,本地优先',
+  activeToolId,
+  hideFooter = false
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://devutils.fox9.dev');
+---
+
+<!doctype html>
+<html lang="zh-CN" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
+
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+
+    <!-- 预防深色主题白屏闪烁脚本 -->
+    <script is:inline>
+      (function() {
+        const storedTheme = localStorage.getItem('theme');
+        const userPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (storedTheme === 'dark' || (!storedTheme && userPrefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+
+    <ClientRouter />
+  </head>
+  <body class="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-600 dark:selection:text-emerald-400">
+    <!-- 全局顶栏 -->
+    <Header client:load activeToolId={activeToolId} />
+
+    <!-- 主体内容 -->
+    <div class="flex-1 flex flex-col">
+      <slot />
+    </div>
+
+    <!-- 页脚 (工具页面可选择精简化隐藏或展示) -->
+    {!hideFooter && <Footer />}
+  </body>
+</html>
