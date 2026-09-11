@@ -1,7 +1,7 @@
-import { defineConfig } from 'astro/config';
-import vue from '@astrojs/vue';
-import tailwindcss from '@tailwindcss/vite';
-import sitemap from '@astrojs/sitemap';
+import { defineConfig } from 'astro/config'
+import vue from '@astrojs/vue'
+import tailwindcss from '@tailwindcss/vite'
+import sitemap from '@astrojs/sitemap'
 
 // https://astro.build/config
 export default defineConfig({
@@ -16,6 +16,6 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
   server: {
-    port: 12356,
+    port: 12356
   }
-});
+})

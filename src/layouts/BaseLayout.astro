@@ -1,16 +1,16 @@
 ---
-import '../styles/global.css';
-import Header from '../components/common/Header.vue';
-import Footer from '../components/common/Footer.astro';
-import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css'
+import Header from '../components/common/Header.vue'
+import Footer from '../components/common/Footer.astro'
+import { ClientRouter } from 'astro:transitions'
 
 interface Props {
-  title?: string;
-  description?: string;
-  keywords?: string;
-  activeToolId?: string;
-  hideHeader?: boolean;
-  hideFooter?: boolean;
+  title?: string
+  description?: string
+  keywords?: string
+  activeToolId?: string
+  hideHeader?: boolean
+  hideFooter?: boolean
 }
 
 const {
@@ -20,9 +20,9 @@ const {
   activeToolId,
   hideHeader = Boolean(activeToolId),
   hideFooter = false
-} = Astro.props;
+} = Astro.props
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://devutils.fox9.dev');
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://devutils.fox9.dev')
 ---
 
 <!doctype html>
@@ -54,32 +54,33 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://devutils
     <!-- 预防深色主题白屏闪烁脚本 & 路由过渡保持主题 & 同步浏览器顶栏 theme-color 与画布底层背景色 -->
     <script is:inline>
       function applyTheme() {
-        const storedTheme = localStorage.getItem('theme');
-        const userPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const isDark = storedTheme === 'dark' || (!storedTheme && userPrefersDark);
-        const meta = document.getElementById('theme-color-meta');
+        const storedTheme = localStorage.getItem('theme')
+        const userPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        const isDark = storedTheme === 'dark' || (!storedTheme && userPrefersDark)
+        const meta = document.getElementById('theme-color-meta')
         if (isDark) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.style.backgroundColor = '#09090b';
-          document.documentElement.style.colorScheme = 'dark';
-          if (meta) meta.setAttribute('content', '#09090b');
+          document.documentElement.classList.add('dark')
+          document.documentElement.style.backgroundColor = '#09090b'
+          document.documentElement.style.colorScheme = 'dark'
+          if (meta) meta.setAttribute('content', '#09090b')
         } else {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.style.backgroundColor = '#fafafa';
-          document.documentElement.style.colorScheme = 'light';
-          if (meta) meta.setAttribute('content', '#fafafa');
+          document.documentElement.classList.remove('dark')
+          document.documentElement.style.backgroundColor = '#fafafa'
+          document.documentElement.style.colorScheme = 'light'
+          if (meta) meta.setAttribute('content', '#fafafa')
         }
       }
-      applyTheme();
-      document.addEventListener('astro:after-swap', applyTheme);
+      applyTheme()
+      document.addEventListener('astro:after-swap', applyTheme)
     </script>
-
     <ClientRouter />
   </head>
-  <body class:list={[
-    "flex flex-col min-h-screen antialiased selection:bg-emerald-500/20 selection:text-emerald-600 dark:selection:text-emerald-400",
-    activeToolId && "h-[100dvh] overflow-hidden"
-  ]}>
+  <body
+    class:list={[
+      'flex flex-col min-h-screen antialiased selection:bg-emerald-500/20 selection:text-emerald-600 dark:selection:text-emerald-400',
+      activeToolId && 'h-[100dvh] overflow-hidden'
+    ]}
+  >
     <!-- 全局顶栏 (工具页面默认隐去) -->
     {!hideHeader && <Header client:load activeToolId={activeToolId} />}
 

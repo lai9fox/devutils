@@ -35,7 +35,9 @@ function applyThemeToDOM(dark: boolean, save = true) {
   }
 
   // 同步移动端与 macOS Safari 浏览器顶栏 theme-color
-  const meta = document.getElementById('theme-color-meta') || document.querySelector('meta[name="theme-color"]')
+  const meta =
+    document.getElementById('theme-color-meta') ||
+    document.querySelector('meta[name="theme-color"]')
   if (meta) {
     meta.setAttribute('content', dark ? '#09090b' : '#fafafa')
   }
@@ -123,7 +125,7 @@ export function useTheme() {
         if (mediaQuery.addEventListener) {
           mediaQuery.addEventListener('change', handleMediaQuery)
         } else if ('addListener' in mediaQuery) {
-          (mediaQuery as any).addListener(handleMediaQuery)
+          ;(mediaQuery as any).addListener(handleMediaQuery)
         }
       }
     }
@@ -141,7 +143,7 @@ export function useTheme() {
         if (mediaQuery.removeEventListener) {
           mediaQuery.removeEventListener('change', handleMediaQuery)
         } else if ('removeListener' in mediaQuery) {
-          (mediaQuery as any).removeListener(handleMediaQuery)
+          ;(mediaQuery as any).removeListener(handleMediaQuery)
         }
       }
     }

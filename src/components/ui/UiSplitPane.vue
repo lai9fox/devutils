@@ -85,7 +85,10 @@ function startResize(e: MouseEvent | TouchEvent) {
     const clientX = getClientX(moveEvent)
     const offsetX = clientX - rect.left
     const percent = (offsetX / rect.width) * 100
-    const clamped = Math.min(props.maxPercent, Math.max(props.minPercent, Math.round(percent * 10) / 10))
+    const clamped = Math.min(
+      props.maxPercent,
+      Math.max(props.minPercent, Math.round(percent * 10) / 10)
+    )
     splitPercent.value = clamped
     emit('update:modelValue', clamped)
     emit('resize', clamped)
@@ -142,7 +145,10 @@ function handleKeyDown(e: KeyboardEvent) {
 
   if (step !== 0) {
     e.preventDefault()
-    const target = Math.min(props.maxPercent, Math.max(props.minPercent, Math.round((splitPercent.value + step) * 10) / 10))
+    const target = Math.min(
+      props.maxPercent,
+      Math.max(props.minPercent, Math.round((splitPercent.value + step) * 10) / 10)
+    )
     splitPercent.value = target
     emit('update:modelValue', target)
     emit('resize', target)
@@ -168,26 +174,34 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="containerRef"
-    class="flex-1 min-h-0 w-full flex flex-col min-w-0"
+    class="flex min-h-0 w-full min-w-0 flex-1 flex-col"
     :class="[
-      breakpoint === 'md' ? 'md:flex-row md:gap-0' :
-      breakpoint === 'sm' ? 'sm:flex-row sm:gap-0' :
-      breakpoint === 'xl' ? 'xl:flex-row xl:gap-0' :
-      breakpoint === 'none' ? 'flex-row gap-0' :
-      'lg:flex-row lg:gap-0',
+      breakpoint === 'md'
+        ? 'md:flex-row md:gap-0'
+        : breakpoint === 'sm'
+          ? 'sm:flex-row sm:gap-0'
+          : breakpoint === 'xl'
+            ? 'xl:flex-row xl:gap-0'
+            : breakpoint === 'none'
+              ? 'flex-row gap-0'
+              : 'lg:flex-row lg:gap-0',
       'gap-2.5',
       { 'select-none': isDragging }
     ]"
   >
     <!-- 左侧面板：小屏堆叠态平分剩余高度 (flex-1)，桌面态按百分比定宽 -->
     <div
-      class="flex-1 min-h-[160px] flex flex-col min-w-0"
+      class="flex min-h-[160px] min-w-0 flex-1 flex-col"
       :class="[
-        breakpoint === 'md' ? 'md:flex-none md:min-h-0 md:h-full' :
-        breakpoint === 'sm' ? 'sm:flex-none sm:min-h-0 sm:h-full' :
-        breakpoint === 'xl' ? 'xl:flex-none xl:min-h-0 xl:h-full' :
-        breakpoint === 'none' ? 'flex-none min-h-0 h-full' :
-        'lg:flex-none lg:min-h-0 lg:h-full',
+        breakpoint === 'md'
+          ? 'md:h-full md:min-h-0 md:flex-none'
+          : breakpoint === 'sm'
+            ? 'sm:h-full sm:min-h-0 sm:flex-none'
+            : breakpoint === 'xl'
+              ? 'xl:h-full xl:min-h-0 xl:flex-none'
+              : breakpoint === 'none'
+                ? 'h-full min-h-0 flex-none'
+                : 'lg:h-full lg:min-h-0 lg:flex-none',
         { 'pointer-events-none select-none': isDragging },
         leftClass
       ]"
@@ -198,14 +212,20 @@ onBeforeUnmount(() => {
 
     <!-- 拖拽手柄 -->
     <div
-      class="items-center justify-center w-2.5 shrink-0 select-none relative z-10 group transition-colors"
+      class="group relative z-10 w-2.5 shrink-0 items-center justify-center transition-colors select-none"
       :class="[
-        breakpoint === 'md' ? 'hidden md:flex' :
-        breakpoint === 'sm' ? 'hidden sm:flex' :
-        breakpoint === 'xl' ? 'hidden xl:flex' :
-        breakpoint === 'none' ? 'flex' :
-        'hidden lg:flex',
-        disabled ? 'cursor-default' : 'cursor-col-resize hover:bg-emerald-500/10 active:bg-emerald-500/20',
+        breakpoint === 'md'
+          ? 'hidden md:flex'
+          : breakpoint === 'sm'
+            ? 'hidden sm:flex'
+            : breakpoint === 'xl'
+              ? 'hidden xl:flex'
+              : breakpoint === 'none'
+                ? 'flex'
+                : 'hidden lg:flex',
+        disabled
+          ? 'cursor-default'
+          : 'cursor-col-resize hover:bg-emerald-500/10 active:bg-emerald-500/20',
         isDragging ? 'bg-emerald-500/20' : ''
       ]"
       role="separator"
@@ -222,10 +242,10 @@ onBeforeUnmount(() => {
     >
       <slot name="handle" :is-dragging="isDragging">
         <div
-          class="w-1 h-8 rounded-full bg-zinc-300 dark:bg-zinc-700 transition-all"
+          class="h-8 w-1 rounded-full bg-zinc-300 transition-all dark:bg-zinc-700"
           :class="[
             disabled ? '' : 'group-hover:bg-emerald-500 group-active:bg-emerald-500',
-            isDragging ? 'bg-emerald-500 h-12' : ''
+            isDragging ? 'h-12 bg-emerald-500' : ''
           ]"
         />
       </slot>
@@ -233,13 +253,17 @@ onBeforeUnmount(() => {
 
     <!-- 右侧面板：小屏堆叠态平分剩余高度 (flex-1) -->
     <div
-      class="flex-1 min-h-[160px] flex flex-col min-w-0"
+      class="flex min-h-[160px] min-w-0 flex-1 flex-col"
       :class="[
-        breakpoint === 'md' ? 'md:min-h-0 md:h-full' :
-        breakpoint === 'sm' ? 'sm:min-h-0 sm:h-full' :
-        breakpoint === 'xl' ? 'xl:min-h-0 xl:h-full' :
-        breakpoint === 'none' ? 'min-h-0 h-full' :
-        'lg:min-h-0 lg:h-full',
+        breakpoint === 'md'
+          ? 'md:h-full md:min-h-0'
+          : breakpoint === 'sm'
+            ? 'sm:h-full sm:min-h-0'
+            : breakpoint === 'xl'
+              ? 'xl:h-full xl:min-h-0'
+              : breakpoint === 'none'
+                ? 'h-full min-h-0'
+                : 'lg:h-full lg:min-h-0',
         { 'pointer-events-none select-none': isDragging },
         rightClass
       ]"

@@ -479,10 +479,21 @@ export function useCodeMirror(
     destroy()
   })
 
-  watch(() => props.modelValue, (val) => syncValue(val))
+  watch(
+    () => props.modelValue,
+    (val) => syncValue(val)
+  )
 
   watch(
-    () => [props.language, props.readonly, props.placeholder, props.lineNumbers, props.codeFolding, props.lint, props.showSearch],
+    () => [
+      props.language,
+      props.readonly,
+      props.placeholder,
+      props.lineNumbers,
+      props.codeFolding,
+      props.lint,
+      props.showSearch
+    ],
     () => {
       if (view) void remountEditor()
     }

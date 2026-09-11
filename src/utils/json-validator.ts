@@ -79,7 +79,10 @@ function getLineAndColFromPos(text: string, pos: number): { line: number; col: n
 /**
  * 从原生错误消息中解析错误位置
  */
-function extractPositionFromError(errMsg: string, text: string): { line: number; col: number; pos: number } {
+function extractPositionFromError(
+  errMsg: string,
+  text: string
+): { line: number; col: number; pos: number } {
   // 1. Chrome / V8: "at position 42"
   const posMatch = errMsg.match(/at position (\d+)/i)
   if (posMatch) {
@@ -147,7 +150,10 @@ function diagnoseError(
   const textBeforePos = text.slice(0, pos).trimEnd()
   const charBefore = textBeforePos[textBeforePos.length - 1]
   const charAtPos = text[pos] || ''
-  if ((charBefore === ',' || textBeforePos.endsWith(',')) && (charAtPos === '}' || charAtPos === ']' || /^\s*[}\]]/.test(text.slice(pos)))) {
+  if (
+    (charBefore === ',' || textBeforePos.endsWith(',')) &&
+    (charAtPos === '}' || charAtPos === ']' || /^\s*[}\]]/.test(text.slice(pos)))
+  ) {
     return {
       friendlyMessage: '存在多余的尾随逗号 (Trailing Comma)',
       suggestion: 'JSON 规范不允许在对象或数组最后一个元素末尾多写逗号，请删除此逗号。'

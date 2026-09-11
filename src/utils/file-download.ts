@@ -291,9 +291,7 @@ export function resolveDownloadFileInfo(
 
   // 3. 根据语言类型或内容推导后缀与格式
   const format = getFormatFromLanguageOrContent(language, content)
-  const safeBaseName = cleanTitle
-    ? cleanTitle.replace(/[\\/:*?"<>|]/g, '_').trim()
-    : 'code'
+  const safeBaseName = cleanTitle ? cleanTitle.replace(/[\\/:*?"<>|]/g, '_').trim() : 'code'
 
   return {
     filename: `${safeBaseName || 'code'}.${format.ext}`,

@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     size: 'sm',
-    uppercase: false,
+    uppercase: false
   }
 )
 
@@ -27,7 +27,7 @@ const normalizedOptions = computed(() => {
     if (typeof opt === 'string') {
       return {
         label: opt,
-        value: opt,
+        value: opt
       } as SegmentedOption
     }
     return opt
@@ -36,7 +36,7 @@ const normalizedOptions = computed(() => {
 
 const sizeClasses = {
   xs: 'h-5 px-2 text-[11px] rounded',
-  sm: 'h-6 px-3 text-xs rounded-md',
+  sm: 'h-6 px-3 text-xs rounded-md'
 }
 
 const rootRef = ref<HTMLElement | null>(null)
@@ -46,7 +46,7 @@ const indicatorReady = ref(false)
 const isAnimated = ref(false)
 
 const activeIndex = computed(() => {
-  return normalizedOptions.value.findIndex(item => item.value === props.modelValue)
+  return normalizedOptions.value.findIndex((item) => item.value === props.modelValue)
 })
 
 function setItemRef(el: any, index: number) {
@@ -60,7 +60,7 @@ function updateIndicator() {
   if (index === -1 || !itemRefs.value[index]) {
     indicatorStyle.value = {
       opacity: '0',
-      visibility: 'hidden',
+      visibility: 'hidden'
     }
     return
   }
@@ -71,7 +71,7 @@ function updateIndicator() {
     visibility: 'visible',
     transform: `translate3d(${el.offsetLeft}px, ${el.offsetTop}px, 0)`,
     width: `${el.offsetWidth}px`,
-    height: `${el.offsetHeight}px`,
+    height: `${el.offsetHeight}px`
   }
 }
 
@@ -123,13 +123,13 @@ onUnmounted(() => {
 <template>
   <div
     ref="rootRef"
-    class="relative inline-flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg select-none box-border shrink-0 whitespace-nowrap"
+    class="relative box-border inline-flex shrink-0 items-center rounded-lg bg-zinc-100 p-1 whitespace-nowrap select-none dark:bg-zinc-800"
     :class="size === 'xs' ? 'h-7' : 'h-8'"
   >
     <!-- 滑动背景指示器 -->
     <div
       v-show="indicatorReady"
-      class="absolute top-0 left-0 bg-white dark:bg-zinc-700 shadow-xs pointer-events-none will-change-[transform,width]"
+      class="pointer-events-none absolute top-0 left-0 bg-white shadow-xs will-change-[transform,width] dark:bg-zinc-700"
       :class="[
         size === 'xs' ? 'rounded' : 'rounded-md',
         isAnimated
@@ -146,21 +146,17 @@ onUnmounted(() => {
       :ref="(el) => setItemRef(el, index)"
       type="button"
       :class="[
-        'relative z-10 inline-flex items-center justify-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer font-medium select-none whitespace-nowrap shrink-0',
+        'relative z-10 inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 font-medium whitespace-nowrap transition-all duration-150 select-none active:scale-95',
         sizeClasses[size],
         uppercase ? 'uppercase' : '',
         modelValue === item.value
           ? 'text-emerald-600 dark:text-emerald-400'
-          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200',
-        !indicatorReady && modelValue === item.value ? 'bg-white dark:bg-zinc-700 shadow-xs' : ''
+          : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200',
+        !indicatorReady && modelValue === item.value ? 'bg-white shadow-xs dark:bg-zinc-700' : ''
       ]"
       @click="handleSelect(item.value)"
     >
-      <component
-        :is="item.icon"
-        v-if="item.icon"
-        class="w-3.5 h-3.5 shrink-0"
-      />
+      <component :is="item.icon" v-if="item.icon" class="h-3.5 w-3.5 shrink-0" />
       <span class="whitespace-nowrap">{{ item.label }}</span>
     </button>
   </div>

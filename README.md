@@ -20,14 +20,14 @@ DevUtils 是一个面向现代开发者的高效在线工具箱，基于 **Astro
 
 ## 🧰 核心工具列表
 
-| 工具 ID | 工具名称 | 核心亮点 |
-| :--- | :--- | :--- |
-| `json-formatter` | **JSON Formatter** | 格式化 / 美化 / 压缩 JSON：2/4/Tab 缩进美化、单行压缩、未加引号 key 自动修复、移除尾随逗号、文档度量统计。 |
+| 工具 ID          | 工具名称           | 核心亮点                                                                                                                   |
+| :--------------- | :----------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| `json-formatter` | **JSON Formatter** | 格式化 / 美化 / 压缩 JSON：2/4/Tab 缩进美化、单行压缩、未加引号 key 自动修复、移除尾随逗号、文档度量统计。                 |
 | `json-validator` | **JSON Validator** | 检查 JSON 是否合法并定位错误：严格 RFC 8259 语法校验、精确行号与列号定位、代码上下文视差指示指针、中文排错建议与一键修复。 |
-| `json-viewer` | **JSON Viewer** | 阅读、折叠、搜索大型 JSON：交互式树形视图、多层级折叠展开控制、全文搜索高亮与命中导航、节点 JSONPath 提取与双栏模式。 |
-| `json-path` | **JSON Path** | 查询 / 提取 JSON 数据：交互式测试 JSONPath 提取表达式（通配符、过滤器、切片与多层级遍历），内置常用语法速查。 |
-| `json-converter` | **JSON Converter** | JSON ↔ YAML / XML / CSV 等：无缝双向互转，保持结构完整并提供格式化输出。 |
-| `json-to-types` | **JSON to Type** | JSON → TypeScript / Java / Go 类型：根据 JSON 自动推断生成 TypeScript、Java (POJO/Record/Lombok)、Go Struct 等类型定义。 |
+| `json-viewer`    | **JSON Viewer**    | 阅读、折叠、搜索大型 JSON：交互式树形视图、多层级折叠展开控制、全文搜索高亮与命中导航、节点 JSONPath 提取与双栏模式。      |
+| `json-path`      | **JSON Path**      | 查询 / 提取 JSON 数据：交互式测试 JSONPath 提取表达式（通配符、过滤器、切片与多层级遍历），内置常用语法速查。              |
+| `json-converter` | **JSON Converter** | JSON ↔ YAML / XML / CSV 等：无缝双向互转，保持结构完整并提供格式化输出。                                                   |
+| `json-to-types`  | **JSON to Type**   | JSON → TypeScript / Java / Go 类型：根据 JSON 自动推断生成 TypeScript、Java (POJO/Record/Lombok)、Go Struct 等类型定义。   |
 
 ---
 

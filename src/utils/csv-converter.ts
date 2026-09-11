@@ -8,7 +8,11 @@ export interface CsvConvertOptions {
 }
 
 function isPlainObject(val: any): val is Record<string, any> {
-  return val !== null && typeof val === 'object' && Object.prototype.toString.call(val) === '[object Object]'
+  return (
+    val !== null &&
+    typeof val === 'object' &&
+    Object.prototype.toString.call(val) === '[object Object]'
+  )
 }
 
 /**
@@ -30,7 +34,7 @@ export function flattenObject(
         result[newKey] = ''
       }
     } else if (Array.isArray(value)) {
-      if (arrayFormat === 'join' && value.every(x => x === null || typeof x !== 'object')) {
+      if (arrayFormat === 'join' && value.every((x) => x === null || typeof x !== 'object')) {
         result[newKey] = value.join(', ')
       } else {
         result[newKey] = JSON.stringify(value)
@@ -56,7 +60,7 @@ export function stringifyNestedValues(
   const result: Record<string, any> = {}
   for (const [key, value] of Object.entries(obj)) {
     if (Array.isArray(value)) {
-      if (arrayFormat === 'join' && value.every(x => x === null || typeof x !== 'object')) {
+      if (arrayFormat === 'join' && value.every((x) => x === null || typeof x !== 'object')) {
         result[key] = value.join(', ')
       } else {
         result[key] = JSON.stringify(value)
@@ -104,24 +108,24 @@ export function jsonToCsv(json: any, options: CsvConvertOptions = {}): string {
     if (json.length === 0) return ''
 
     // 检查是否为一维基础类型数组（字符串、数字、布尔、null）
-    const allPrimitives = json.every(item => item === null || typeof item !== 'object')
+    const allPrimitives = json.every((item) => item === null || typeof item !== 'object')
     if (allPrimitives) {
       return Papa.unparse({
         fields: ['value'],
-        data: json.map(item => [item ?? ''])
+        data: json.map((item) => [item ?? ''])
       })
     }
 
     // 检查是否为二维数组
-    const allArrays = json.every(item => Array.isArray(item))
+    const allArrays = json.every((item) => Array.isArray(item))
     if (allArrays) {
       // 检查是否有 3 维以上数组
-      const hasDeepArray = json.some(row => row.some((cell: any) => Array.isArray(cell)))
+      const hasDeepArray = json.some((row) => row.some((cell: any) => Array.isArray(cell)))
       if (hasDeepArray) {
         throw new Error('不支持三维及以上的多维数组转换为 CSV。')
       }
       // 将非基础类型的单元格序列化为 JSON 字符串
-      const processedRows = json.map(row =>
+      const processedRows = json.map((row) =>
         row.map((cell: any) =>
           cell !== null && typeof cell === 'object' ? JSON.stringify(cell) : (cell ?? '')
         )
@@ -130,16 +134,16 @@ export function jsonToCsv(json: any, options: CsvConvertOptions = {}): string {
     }
 
     // 检查是否为对象数组
-    const allObjects = json.every(item => isPlainObject(item))
+    const allObjects = json.every((item) => isPlainObject(item))
     if (allObjects) {
-      const processedList = json.map(item => {
+      const processedList = json.map((item) => {
         return flatten
           ? flattenObject(item, '', arrayFormat)
           : stringifyNestedValues(item, arrayFormat)
       })
 
       // 合并所有唯一的 key，不存在的值留空，确保不同字段的对象能够完整合并
-      const allKeys = Array.from(new Set(processedList.flatMap(item => Object.keys(item))))
+      const allKeys = Array.from(new Set(processedList.flatMap((item) => Object.keys(item))))
 
       return Papa.unparse({
         fields: allKeys,
@@ -255,10 +259,10 @@ export function csvToJson(csvStr: string, options: CsvConvertOptions = {}): any 
   // 检查是否为由一维基础类型数组导出的单列（表头为 value）
   const fields = parsed.meta?.fields || Object.keys(rows[0] || {})
   if (fields.length === 1 && fields[0] === 'value') {
-    return rows.map(r => parseCellValue(r.value))
+    return rows.map((r) => parseCellValue(r.value))
   }
 
-  const processed = rows.map(row => {
+  const processed = rows.map((row) => {
     if (flatten) {
       return unflattenObject(row)
     } else {

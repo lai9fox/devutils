@@ -39,9 +39,7 @@ function show(options: MessageOptions | string, type: MessageType = 'info'): () 
   ensureContainer()
 
   const normalizedOptions: MessageOptions =
-    typeof options === 'string'
-      ? { content: options, type }
-      : { type, ...options }
+    typeof options === 'string' ? { content: options, type } : { type, ...options }
 
   const id = ++seed
   const duration = normalizedOptions.duration ?? 2500
@@ -51,7 +49,7 @@ function show(options: MessageOptions | string, type: MessageType = 'info'): () 
     type: normalizedOptions.type || type,
     content: normalizedOptions.content,
     duration,
-    closable: normalizedOptions.closable ?? false,
+    closable: normalizedOptions.closable ?? false
   }
 
   if (messageList.value.length >= 4) {
@@ -69,19 +67,15 @@ function show(options: MessageOptions | string, type: MessageType = 'info'): () 
   return () => removeMessage(id)
 }
 
-export const message = Object.assign(
-  (options: MessageOptions | string) => show(options),
-  {
-    success: (content: string, duration?: number) =>
-      show({ content, duration, type: 'success' }, 'success'),
-    error: (content: string, duration?: number) =>
-      show({ content, duration, type: 'error' }, 'error'),
-    warning: (content: string, duration?: number) =>
-      show({ content, duration, type: 'warning' }, 'warning'),
-    info: (content: string, duration?: number) =>
-      show({ content, duration, type: 'info' }, 'info'),
-    destroy: () => {
-      messageList.value = []
-    },
+export const message = Object.assign((options: MessageOptions | string) => show(options), {
+  success: (content: string, duration?: number) =>
+    show({ content, duration, type: 'success' }, 'success'),
+  error: (content: string, duration?: number) =>
+    show({ content, duration, type: 'error' }, 'error'),
+  warning: (content: string, duration?: number) =>
+    show({ content, duration, type: 'warning' }, 'warning'),
+  info: (content: string, duration?: number) => show({ content, duration, type: 'info' }, 'info'),
+  destroy: () => {
+    messageList.value = []
   }
-)
+})

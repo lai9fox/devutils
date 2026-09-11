@@ -24,7 +24,7 @@ const props = withDefaults(
     disabled: false,
     selectClass: '',
     menuClass: '',
-    placement: 'left',
+    placement: 'left'
   }
 )
 
@@ -155,10 +155,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    ref="containerRef"
-    class="relative inline-block text-left select-none"
-  >
+  <div ref="containerRef" class="relative inline-block text-left select-none">
     <!-- 下拉触发按钮 -->
     <button
       ref="triggerRef"
@@ -167,14 +164,15 @@ onBeforeUnmount(() => {
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
       :class="[
-        'inline-flex items-center justify-between gap-2 border text-zinc-900 dark:text-zinc-100 shadow-xs transition-colors select-none text-left',
+        'inline-flex items-center justify-between gap-2 border text-left text-zinc-900 shadow-xs transition-colors select-none dark:text-zinc-100',
         disabled
-          ? 'bg-zinc-100 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800/80 text-zinc-400 dark:text-zinc-500 cursor-not-allowed pointer-events-none shadow-none'
-          : 'bg-white dark:bg-zinc-900 cursor-pointer',
-        !disabled && (isOpen
-          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'),
-        size === 'sm' ? 'h-8 px-2.5 text-xs rounded-lg' : 'h-9 px-3 text-sm rounded-lg',
+          ? 'pointer-events-none cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400 shadow-none dark:border-zinc-800/80 dark:bg-zinc-900/50 dark:text-zinc-500'
+          : 'cursor-pointer bg-white dark:bg-zinc-900',
+        !disabled &&
+          (isOpen
+            ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+            : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700'),
+        size === 'sm' ? 'h-8 rounded-lg px-2.5 text-xs' : 'h-9 rounded-lg px-3 text-sm',
         selectClass
       ]"
       @click="toggleOpen"
@@ -182,7 +180,7 @@ onBeforeUnmount(() => {
     >
       <span class="truncate">{{ currentLabel }}</span>
       <ChevronDown
-        class="w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200"
+        class="h-3.5 w-3.5 shrink-0 text-zinc-400 transition-transform duration-200"
         :class="{ 'rotate-180': isOpen }"
       />
     </button>
@@ -200,7 +198,7 @@ onBeforeUnmount(() => {
         v-if="isOpen"
         role="listbox"
         :class="[
-          'absolute top-full mt-1.5 min-w-full w-max max-h-64 overflow-y-auto rounded-xl p-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl z-50 text-xs backdrop-blur-md',
+          'absolute top-full z-50 mt-1.5 max-h-64 w-max min-w-full overflow-y-auto rounded-xl border border-zinc-200 bg-white p-1 text-xs shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900',
           placement === 'right' ? 'right-0' : 'left-0',
           menuClass
         ]"
@@ -213,13 +211,13 @@ onBeforeUnmount(() => {
           :aria-selected="isSelected(opt.value)"
           :disabled="opt.disabled"
           :class="[
-            'w-full flex items-center justify-between gap-3 px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer text-left select-none outline-none focus:outline-none',
+            'flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium transition-colors outline-none select-none focus:outline-none',
             isSelected(opt.value)
-              ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'
+              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
               : focusedIndex === idx
-                ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-                : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100',
-            opt.disabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
+                ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100',
+            opt.disabled ? 'pointer-events-none cursor-not-allowed opacity-40' : ''
           ]"
           @mouseenter="focusedIndex = idx"
           @click="handleSelect(opt)"
@@ -227,7 +225,7 @@ onBeforeUnmount(() => {
           <span class="truncate">{{ opt.label }}</span>
           <Check
             v-if="isSelected(opt.value)"
-            class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0"
+            class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
           />
         </button>
       </div>

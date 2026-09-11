@@ -16,7 +16,7 @@ const props = withDefaults(
     max: 8,
     step: 1,
     disabled: false,
-    class: '',
+    class: ''
   }
 )
 
@@ -47,7 +47,13 @@ function handleChange(e: Event) {
 </script>
 
 <template>
-  <div :class="['relative inline-flex items-center select-none', disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '', props.class]">
+  <div
+    :class="[
+      'relative inline-flex items-center select-none',
+      disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : '',
+      props.class
+    ]"
+  >
     <input
       type="range"
       :min="min"
@@ -56,9 +62,9 @@ function handleChange(e: Event) {
       :value="modelValue"
       :disabled="disabled"
       :style="{
-        background: `linear-gradient(to right, #10b981 0%, #10b981 ${percentage}%, currentColor ${percentage}%, currentColor 100%)`,
+        background: `linear-gradient(to right, #10b981 0%, #10b981 ${percentage}%, currentColor ${percentage}%, currentColor 100%)`
       }"
-      class="ui-slider-input w-full h-1.5 rounded-full appearance-none cursor-pointer text-zinc-200 dark:text-zinc-700"
+      class="ui-slider-input h-1.5 w-full cursor-pointer appearance-none rounded-full text-zinc-200 dark:text-zinc-700"
       @input="handleInput"
       @change="handleChange"
     />
@@ -75,7 +81,9 @@ function handleChange(e: Event) {
   border: 2px solid #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 :global(.dark) .ui-slider-input::-webkit-slider-thumb {
@@ -100,7 +108,9 @@ function handleChange(e: Event) {
   border: 2px solid #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 :global(.dark) .ui-slider-input::-moz-range-thumb {

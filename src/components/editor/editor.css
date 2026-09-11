@@ -33,7 +33,9 @@
   max-height: 100% !important;
   min-height: 0 !important;
   flex: 1 1 0% !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace !important;
 }
 
 .editor-host.cm-auto-height .cm-editor {
@@ -45,7 +47,9 @@
 }
 
 .editor-host.cm-auto-height .cm-scroller {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace !important;
 }
 
 .editor-host .cm-content {
@@ -230,7 +234,9 @@
   background-color: #ffffff !important;
   border: 1px solid #e4e4e7 !important;
   border-radius: 0.5rem !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05) !important;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.08),
+    0 4px 6px -4px rgba(0, 0, 0, 0.05) !important;
   overflow: hidden !important;
   max-width: 440px !important;
   z-index: 500 !important;
@@ -241,7 +247,9 @@
 .dark .cm-tooltip:has(.cm-tooltip-lint) {
   background-color: #18181b !important;
   border: 1px solid #27272a !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.4),
+    0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* 隐藏 Tooltip 小箭头（如果有），保持极简卡片视觉 */
@@ -285,7 +293,9 @@
   font-size: 0.75rem !important;
   line-height: 1.5 !important;
   color: #27272a !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace !important;
 }
 
 .dark .cm-tooltip-lint .cm-diagnostic {
@@ -410,10 +420,14 @@
   background-color: #ffffff !important;
   color: #18181b !important;
   font-size: 0.75rem !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace !important;
   outline: none !important;
   margin: 0 !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
 }
 
 .dark .cm-panel.cm-search .cm-textfield {
@@ -535,7 +549,7 @@
   font-weight: 500 !important;
 }
 
-.cm-panel.cm-search input[type="checkbox"] {
+.cm-panel.cm-search input[type='checkbox'] {
   accent-color: #10b981 !important;
   width: 13px !important;
   height: 13px !important;
@@ -544,7 +558,7 @@
 }
 
 /* 关闭按钮：宽高统一为 28px，与其他按钮高度完全一致 */
-.cm-panel.cm-search button[name="close"] {
+.cm-panel.cm-search button[name='close'] {
   position: absolute !important;
   top: 8px !important;
   right: 8px !important;
@@ -566,17 +580,17 @@
   transition: all 0.15s ease !important;
 }
 
-.cm-panel.cm-search button[name="close"]:hover {
+.cm-panel.cm-search button[name='close']:hover {
   background-color: #e4e4e7 !important;
   border-color: #d4d4d8 !important;
   color: #18181b !important;
 }
 
-.dark .cm-panel.cm-search button[name="close"] {
+.dark .cm-panel.cm-search button[name='close'] {
   color: #71717a !important;
 }
 
-.dark .cm-panel.cm-search button[name="close"]:hover {
+.dark .cm-panel.cm-search button[name='close']:hover {
   background-color: #3f3f46 !important;
   border-color: #52525b !important;
   color: #f4f4f5 !important;
@@ -635,4 +649,3 @@
     display: none !important;
   }
 }
-

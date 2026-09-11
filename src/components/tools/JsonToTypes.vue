@@ -53,7 +53,7 @@ const languageOptions = computed(() => [
 ])
 
 const currentEditorLang = computed<CodeLanguage>(() => {
-  const match = languages.find(l => l.id === selectedLang.value)
+  const match = languages.find((l) => l.id === selectedLang.value)
   return match?.editorLang || 'plain'
 })
 
@@ -86,41 +86,36 @@ const generatedCode = computed(() => {
 </script>
 
 <template>
-  <div class="h-full min-h-full flex-1 flex flex-col min-h-0 w-full gap-2.5">
+  <div class="flex h-full min-h-0 min-h-full w-full flex-1 flex-col gap-2.5">
     <!-- 顶部操作栏 -->
-    <div class="flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xs shrink-0">
-      <div class="flex flex-wrap items-center gap-2 max-w-full">
+    <div
+      class="flex shrink-0 flex-wrap items-center justify-between gap-2.5 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-xs dark:border-zinc-800 dark:bg-[#121215]"
+    >
+      <div class="flex max-w-full flex-wrap items-center gap-2">
         <!-- 语言选择 Tabs: 桌面端全名，移动端紧凑 TS/Java/Go/Rust/Python，杜绝文字折行与样式错位 -->
-        <div class="overflow-x-auto max-w-full pb-0.5 scrollbar-none shrink-0">
-          <UiSegmented
-            v-model="selectedLang"
-            :options="languageOptions"
-          />
+        <div class="scrollbar-none max-w-full shrink-0 overflow-x-auto pb-0.5">
+          <UiSegmented v-model="selectedLang" :options="languageOptions" />
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap min-w-0">
+        <div class="flex min-w-0 flex-wrap items-center gap-2">
           <!-- Java 风格切换下拉框 -->
-          <div v-if="selectedLang === 'java'" class="flex items-center gap-1.5 text-xs shrink-0">
-            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">代码风格:</span>
+          <div v-if="selectedLang === 'java'" class="flex shrink-0 items-center gap-1.5 text-xs">
+            <span class="shrink-0 text-zinc-500 dark:text-zinc-400">代码风格:</span>
             <UiSelect
               v-model="javaStyle"
               :options="[
                 { label: 'POJO (Getter / Setter)', value: 'pojo' },
                 { label: 'Record (Java 16+)', value: 'record' },
-                { label: 'Lombok (@Data)', value: 'lombok' },
+                { label: 'Lombok (@Data)', value: 'lombok' }
               ]"
             />
           </div>
 
           <!-- 根类型名称输入 -->
-          <div class="flex items-center gap-1.5 text-xs shrink-0">
-            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">类型名:</span>
+          <div class="flex shrink-0 items-center gap-1.5 text-xs">
+            <span class="shrink-0 text-zinc-500 dark:text-zinc-400">类型名:</span>
             <div class="w-24">
-              <UiInput
-                v-model="rootTypeName"
-                placeholder="Root"
-                mono
-              />
+              <UiInput v-model="rootTypeName" placeholder="Root" mono />
             </div>
           </div>
         </div>
@@ -146,7 +141,7 @@ const generatedCode = computed(() => {
           :model-value="generatedCode"
           :title="`生成的 ${selectedLang.toUpperCase()} 类型模型`"
           :language="currentEditorLang"
-          :filename="`${(rootTypeName.trim() || 'root').toLowerCase()}.${languages.find(l => l.id === selectedLang)?.ext || 'txt'}`"
+          :filename="`${(rootTypeName.trim() || 'root').toLowerCase()}.${languages.find((l) => l.id === selectedLang)?.ext || 'txt'}`"
           readonly
           placeholder="生成的强类型模型将在此实时展示..."
         />

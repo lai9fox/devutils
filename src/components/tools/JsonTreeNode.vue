@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import {
-  ChevronRight,
-  ChevronDown,
-  Copy,
-  Check,
-  Route
-} from '@lucide/vue'
+import { ChevronRight, ChevronDown, Copy, Check, Route } from '@lucide/vue'
 
 const props = defineProps<{
   nodeKey?: string | number
@@ -52,7 +46,10 @@ const collapsedPreview = computed(() => {
   if (isArray.value) {
     const arr = props.value as unknown[]
     if (arr.length === 0) return '[]'
-    return `[ ${arr.slice(0, 3).map(v => typeof v === 'object' ? '{...}' : JSON.stringify(v)).join(', ')}${arr.length > 3 ? ', ...' : ''} ]`
+    return `[ ${arr
+      .slice(0, 3)
+      .map((v) => (typeof v === 'object' ? '{...}' : JSON.stringify(v)))
+      .join(', ')}${arr.length > 3 ? ', ...' : ''} ]`
   }
   const keys = Object.keys(props.value as Record<string, unknown>)
   if (keys.length === 0) return '{}'
@@ -99,20 +96,20 @@ function copyValue() {
 </script>
 
 <template>
-  <div class="font-mono text-xs select-text leading-relaxed">
+  <div class="font-mono text-xs leading-relaxed select-text">
     <!-- 节点行 -->
     <div
-      class="group flex items-center py-0.5 px-1.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-default"
+      class="group flex cursor-default items-center rounded px-1.5 py-0.5 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
       @click.stop="handleNodeClick"
     >
       <!-- 折叠/展开箭头 (仅针对 Object / Array) -->
       <button
         v-if="isObject"
-        class="w-4 h-4 -ml-1 flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer shrink-0"
+        class="-ml-1 flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
         @click.stop="toggleExpand"
       >
         <ChevronRight
-          class="w-3.5 h-3.5 transition-transform duration-150 ease-out"
+          class="h-3.5 w-3.5 transition-transform duration-150 ease-out"
           :class="isExpanded ? 'rotate-90' : 'rotate-0'"
         />
       </button>
@@ -121,7 +118,7 @@ function copyValue() {
       <!-- 键名 (Key / Index) -->
       <span
         v-if="nodeKey !== undefined"
-        class="mr-1.5 font-medium shrink-0"
+        class="mr-1.5 shrink-0 font-medium"
         :class="isArray ? 'text-zinc-400' : 'text-zinc-800 dark:text-zinc-200'"
       >
         <template v-if="!isArray">"{{ nodeKey }}":</template>
@@ -132,17 +129,21 @@ function copyValue() {
       <template v-if="isObject">
         <span v-if="isExpanded" class="text-zinc-400">
           {{ isArray ? '[' : '{' }}
-          <span class="text-[10px] text-zinc-400 font-sans ml-1 opacity-60">({{ countLabel }})</span>
+          <span class="ml-1 font-sans text-[10px] text-zinc-400 opacity-60"
+            >({{ countLabel }})</span
+          >
         </span>
 
         <!-- 折叠态的预览 -->
         <span
           v-else
-          class="text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer text-xs"
+          class="cursor-pointer text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           @click.stop="toggleExpand"
         >
           <span class="text-zinc-400">{{ isArray ? '[' : '{' }}</span>
-          <span class="mx-1 px-1.5 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-300 font-sans font-normal">
+          <span
+            class="py-0.2 mx-1 rounded bg-zinc-200/70 px-1.5 font-sans text-[11px] font-normal text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+          >
             {{ countLabel }}
           </span>
           <span class="opacity-70">{{ collapsedPreview }}</span>
@@ -155,7 +156,7 @@ function copyValue() {
         <!-- 字符串 -->
         <span
           v-if="typeof value === 'string'"
-          class="text-emerald-600 dark:text-emerald-400 break-all"
+          class="break-all text-emerald-600 dark:text-emerald-400"
         >
           "{{ value }}"
         </span>
@@ -163,7 +164,7 @@ function copyValue() {
         <!-- 数字 -->
         <span
           v-else-if="typeof value === 'number'"
-          class="text-sky-600 dark:text-sky-400 font-semibold"
+          class="font-semibold text-sky-600 dark:text-sky-400"
         >
           {{ value }}
         </span>
@@ -171,18 +172,13 @@ function copyValue() {
         <!-- 布尔 -->
         <span
           v-else-if="typeof value === 'boolean'"
-          class="text-amber-600 dark:text-amber-400 font-bold"
+          class="font-bold text-amber-600 dark:text-amber-400"
         >
           {{ value }}
         </span>
 
         <!-- Null -->
-        <span
-          v-else-if="value === null"
-          class="text-zinc-400 italic"
-        >
-          null
-        </span>
+        <span v-else-if="value === null" class="text-zinc-400 italic"> null </span>
 
         <!-- Other -->
         <span v-else class="text-zinc-500">
@@ -194,26 +190,28 @@ function copyValue() {
       <span v-if="!isLast && (!isObject || !isExpanded)" class="text-zinc-400">,</span>
 
       <!-- 悬停快捷复制按钮 (紧随值/逗号后方显示，无需大幅移动鼠标) -->
-      <div class="inline-flex items-center gap-0.5 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+      <div
+        class="ml-1.5 inline-flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+      >
         <button
           type="button"
-          class="p-0.5 rounded text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70 cursor-pointer transition-colors"
+          class="cursor-pointer rounded p-0.5 text-zinc-400 transition-colors hover:bg-zinc-200/70 hover:text-emerald-600 dark:hover:bg-zinc-700/70 dark:hover:text-emerald-400"
           :class="{ 'text-emerald-600 dark:text-emerald-400': copiedField === 'path' }"
           title="复制路径 (JSONPath)"
           @click.stop="copyPath"
         >
-          <Check v-if="copiedField === 'path'" class="w-3 h-3 text-emerald-500" />
-          <Route v-else class="w-3 h-3" />
+          <Check v-if="copiedField === 'path'" class="h-3 w-3 text-emerald-500" />
+          <Route v-else class="h-3 w-3" />
         </button>
         <button
           type="button"
-          class="p-0.5 rounded text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70 cursor-pointer transition-colors"
+          class="cursor-pointer rounded p-0.5 text-zinc-400 transition-colors hover:bg-zinc-200/70 hover:text-emerald-600 dark:hover:bg-zinc-700/70 dark:hover:text-emerald-400"
           :class="{ 'text-emerald-600 dark:text-emerald-400': copiedField === 'value' }"
           title="复制节点值"
           @click.stop="copyValue"
         >
-          <Check v-if="copiedField === 'value'" class="w-3 h-3 text-emerald-500" />
-          <Copy v-else class="w-3 h-3" />
+          <Check v-if="copiedField === 'value'" class="h-3 w-3 text-emerald-500" />
+          <Copy v-else class="h-3 w-3" />
         </button>
       </div>
     </div>
@@ -221,7 +219,7 @@ function copyValue() {
     <!-- 展开时递归渲染子项 -->
     <div
       v-if="isObject && isExpanded"
-      class="border-l border-zinc-200/70 dark:border-zinc-800/80 ml-2.5 pl-2 flex flex-col"
+      class="ml-2.5 flex flex-col border-l border-zinc-200/70 pl-2 dark:border-zinc-800/80"
     >
       <JsonTreeNode
         v-for="([k, v], idx) in childEntries"
@@ -239,7 +237,7 @@ function copyValue() {
       />
 
       <!-- 闭合符号 -->
-      <div class="py-0.5 px-1.5 text-zinc-400">
+      <div class="px-1.5 py-0.5 text-zinc-400">
         {{ isArray ? ']' : '}' }}<span v-if="!isLast">,</span>
       </div>
     </div>

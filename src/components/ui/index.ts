@@ -26,6 +26,5 @@ export type {
   CheckboxSize,
   CheckboxProps,
   SplitPaneBreakpoint,
-  SplitPaneProps,
+  SplitPaneProps
 } from './types'
-

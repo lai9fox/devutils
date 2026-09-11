@@ -5,14 +5,14 @@ import UiMessage from './UiMessage.vue'
 
 <template>
   <div
-    class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none flex flex-col items-center gap-2.5 w-full max-w-lg px-4"
+    class="pointer-events-none fixed top-4 left-1/2 z-[9999] flex w-full max-w-lg -translate-x-1/2 flex-col items-center gap-2.5 px-4"
     aria-live="polite"
   >
     <TransitionGroup name="msg-slide">
       <div
         v-for="item in messageList"
         :key="item.id"
-        class="flex justify-center w-full will-change-[transform,opacity]"
+        class="flex w-full justify-center will-change-[transform,opacity]"
       >
         <UiMessage
           :type="item.type"

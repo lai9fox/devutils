@@ -49,24 +49,30 @@ const outputFormatted = computed(() => {
 </script>
 
 <template>
-  <div class="h-full min-h-full flex-1 flex flex-col min-h-0 w-full gap-2.5">
+  <div class="flex h-full min-h-0 min-h-full w-full flex-1 flex-col gap-2.5">
     <!-- JSONPath 表达式与操作栏 -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 px-3 py-2 bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xs shrink-0">
-      <div class="relative flex-1 min-w-0">
+    <div
+      class="flex shrink-0 flex-col items-stretch gap-2.5 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-xs sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-[#121215]"
+    >
+      <div class="relative min-w-0 flex-1">
         <UiInput
           v-model="pathExpression"
           placeholder="输入表达式，例如 $.store.books[*].title 或 $..price"
           mono
         >
           <template #prefix>
-            <Filter class="w-3.5 h-3.5" />
+            <Filter class="h-3.5 w-3.5" />
           </template>
         </UiInput>
       </div>
 
-      <div v-if="pathExpression && jsonInput" class="flex items-center gap-2 shrink-0">
-        <span class="text-xs text-zinc-400 whitespace-nowrap">
-          找到 <strong class="text-emerald-600 dark:text-emerald-400">{{ evaluated.matches.length }}</strong> 项
+      <div v-if="pathExpression && jsonInput" class="flex shrink-0 items-center gap-2">
+        <span class="text-xs whitespace-nowrap text-zinc-400">
+          找到
+          <strong class="text-emerald-600 dark:text-emerald-400">{{
+            evaluated.matches.length
+          }}</strong>
+          项
         </span>
       </div>
     </div>
@@ -100,16 +106,18 @@ const outputFormatted = computed(() => {
     <!-- 匹配路径列表：紧凑吸底展示 -->
     <div
       v-if="evaluated.paths.length > 0"
-      class="flex flex-col gap-1 shrink-0 max-h-28 overflow-y-auto px-1"
+      class="flex max-h-28 shrink-0 flex-col gap-1 overflow-y-auto px-1"
     >
       <div class="flex items-center justify-between text-[11px] font-medium text-zinc-400">
         <span>匹配节点路径清单 ({{ evaluated.paths.length }})</span>
       </div>
-      <div class="flex flex-wrap gap-1 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215] text-xs font-mono">
+      <div
+        class="flex flex-wrap gap-1 rounded-lg border border-zinc-200 bg-white p-2 font-mono text-xs dark:border-zinc-800 dark:bg-[#121215]"
+      >
         <span
           v-for="(path, idx) in evaluated.paths"
           :key="idx"
-          class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 border border-zinc-200 dark:border-zinc-700/80 text-[11px]"
+          class="rounded border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-emerald-600 dark:border-zinc-700/80 dark:bg-zinc-800 dark:text-emerald-400"
         >
           {{ path }}
         </span>

@@ -19,7 +19,7 @@ const props = withDefaults(
     size: 'sm',
     variant: 'secondary',
     timeout: 2000,
-    title: undefined,
+    title: undefined
   }
 )
 
@@ -78,14 +78,8 @@ onBeforeUnmount(() => {
     @click="handleCopy"
   >
     <template #prefix>
-      <Check
-        v-if="copied"
-        class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0"
-      />
-      <Copy
-        v-else
-        class="w-3.5 h-3.5 shrink-0"
-      />
+      <Check v-if="copied" class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+      <Copy v-else class="h-3.5 w-3.5 shrink-0" />
     </template>
     <span v-if="label">{{ copied ? copiedLabel : label }}</span>
   </UiButton>

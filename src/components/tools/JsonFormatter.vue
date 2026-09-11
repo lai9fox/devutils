@@ -2,11 +2,7 @@
 import { ref } from 'vue'
 import CodeEditor from '../editor/CodeEditor.vue'
 import { repairJson } from '../../utils/json-repair'
-import {
-  AlignLeft,
-  Minimize2,
-  Wrench,
-} from '@lucide/vue'
+import { AlignLeft, Minimize2, Wrench } from '@lucide/vue'
 import { UiButton, UiSegmented, message } from '../ui'
 
 const content = ref('')
@@ -36,11 +32,7 @@ function handleFormat(showToast = true) {
       const parsed = JSON.parse(repaired)
       content.value = JSON.stringify(parsed, null, getIndent())
       if (showToast) {
-        message.info(
-          changed
-            ? '检测到非标准语法，已自动容错修复并完成格式化'
-            : '格式化成功'
-        )
+        message.info(changed ? '检测到非标准语法，已自动容错修复并完成格式化' : '格式化成功')
       }
     } catch {
       if (showToast) {
@@ -88,9 +80,11 @@ function handleRepair() {
 </script>
 
 <template>
-  <div class="h-full min-h-full flex-1 flex flex-col min-h-0 w-full gap-2.5">
+  <div class="flex h-full min-h-0 min-h-full w-full flex-1 flex-col gap-2.5">
     <!-- 操作工具条 -->
-    <div class="flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xs shrink-0">
+    <div
+      class="flex shrink-0 flex-wrap items-center justify-between gap-2.5 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-xs dark:border-zinc-800 dark:bg-zinc-900"
+    >
       <div class="flex flex-wrap items-center gap-2">
         <!-- 缩进分段选项 -->
         <div class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
@@ -100,29 +94,23 @@ function handleRepair() {
             :options="[
               { label: '2 空格', value: 2 },
               { label: '4 空格', value: 4 },
-              { label: 'Tab', value: 'tab' },
+              { label: 'Tab', value: 'tab' }
             ]"
             size="sm"
             @change="() => handleFormat(false)"
           />
         </div>
 
-        <UiButton
-          variant="primary"
-          @click="() => handleFormat(true)"
-        >
+        <UiButton variant="primary" @click="() => handleFormat(true)">
           <template #prefix>
-            <AlignLeft class="w-3.5 h-3.5" />
+            <AlignLeft class="h-3.5 w-3.5" />
           </template>
           格式化
         </UiButton>
 
-        <UiButton
-          variant="secondary"
-          @click="handleMinify"
-        >
+        <UiButton variant="secondary" @click="handleMinify">
           <template #prefix>
-            <Minimize2 class="w-3.5 h-3.5" />
+            <Minimize2 class="h-3.5 w-3.5" />
           </template>
           压缩单行
         </UiButton>
@@ -133,7 +121,7 @@ function handleRepair() {
           @click="handleRepair"
         >
           <template #prefix>
-            <Wrench class="w-3.5 h-3.5" />
+            <Wrench class="h-3.5 w-3.5" />
           </template>
           智能修复
         </UiButton>
@@ -141,7 +129,7 @@ function handleRepair() {
     </div>
 
     <!-- 单一核心编辑器，撑满全部剩余垂直与水平空间 -->
-    <div class="flex-1 flex flex-col min-h-0 w-full">
+    <div class="flex min-h-0 w-full flex-1 flex-col">
       <CodeEditor
         v-model="content"
         title="JSON 编辑器"

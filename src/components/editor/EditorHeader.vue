@@ -39,28 +39,28 @@ defineProps<{
 defineEmits<{
   'toggle-fold': []
   'toggle-wrap': []
-  'search': []
-  'clear': []
-  'open': []
-  'copy': []
-  'download': []
+  search: []
+  clear: []
+  open: []
+  copy: []
+  download: []
 }>()
 </script>
 
 <template>
   <div
-    class="flex items-center justify-between px-3 h-[42px] border-b border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-[#18181d] backdrop-blur-xs select-none gap-2 shrink-0 box-border"
+    class="box-border flex h-[42px] shrink-0 items-center justify-between gap-2 border-b border-zinc-200/80 bg-zinc-50/80 px-3 backdrop-blur-xs select-none dark:border-zinc-800/80 dark:bg-[#18181d]"
   >
     <!-- 左侧区域：标题、语言Badge、只读指示、插槽 -->
-    <div class="flex items-center gap-2 overflow-hidden min-w-0">
+    <div class="flex min-w-0 items-center gap-2 overflow-hidden">
       <slot name="header-left">
         <!-- 标题与图标 -->
         <div
-          class="flex items-center gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200 min-w-0 truncate"
+          class="flex min-w-0 items-center gap-1.5 truncate text-xs font-semibold text-zinc-700 dark:text-zinc-200"
           :title="title || undefined"
         >
           <slot name="title-icon">
-            <Code2 class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <Code2 class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
           </slot>
           <span v-if="title" class="editor-title-text truncate select-none">{{ title }}</span>
         </div>
@@ -68,17 +68,17 @@ defineEmits<{
         <!-- 语言类型 Badge (无阴影扁平风格) -->
         <div
           v-if="showLanguage && language"
-          class="inline-flex items-center gap-1.5 px-2 h-[22px] text-[11px] font-mono font-medium rounded-md bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700/80 shrink-0 whitespace-nowrap select-none"
+          class="inline-flex h-[22px] shrink-0 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2 font-mono text-[11px] font-medium whitespace-nowrap text-zinc-600 select-none dark:border-zinc-700/80 dark:bg-zinc-800 dark:text-zinc-300"
           :title="`代码类型: ${currentLanguageLabel || language.toUpperCase()}`"
         >
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+          <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
           <span>{{ currentLanguageLabel || language.toUpperCase() }}</span>
         </div>
 
         <!-- 只读标签 -->
         <span
           v-if="readonly"
-          class="inline-flex items-center px-2 h-[22px] text-[11px] font-medium rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/80 shrink-0 whitespace-nowrap select-none"
+          class="inline-flex h-[22px] shrink-0 items-center rounded-md border border-zinc-200 bg-zinc-100 px-2 text-[11px] font-medium whitespace-nowrap text-zinc-500 select-none dark:border-zinc-700/80 dark:bg-zinc-800 dark:text-zinc-400"
         >
           只读
         </span>
@@ -86,11 +86,11 @@ defineEmits<{
     </div>
 
     <!-- 右侧区域：统计指标与高频快捷按钮 -->
-    <div class="flex items-center gap-1 shrink-0 text-xs">
+    <div class="flex shrink-0 items-center gap-1 text-xs">
       <!-- 行数与字符统计 -->
       <div
         v-if="showStats"
-        class="editor-stats hidden sm:inline-flex items-center gap-1 text-[11px] font-mono text-zinc-400 dark:text-zinc-500 mr-1 select-none shrink-0"
+        class="editor-stats mr-1 hidden shrink-0 items-center gap-1 font-mono text-[11px] text-zinc-400 select-none sm:inline-flex dark:text-zinc-500"
       >
         <span>{{ lineCount || 0 }} 行</span>
         <span class="editor-stats-chars">·</span>
@@ -104,95 +104,101 @@ defineEmits<{
       <button
         v-if="showFold && codeFolding"
         type="button"
-        class="p-1.5 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-all duration-150 active:scale-90 cursor-pointer"
+        class="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-all duration-150 hover:bg-zinc-200/60 hover:text-zinc-800 active:scale-90 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         :title="isAllFolded ? '展开全部代码' : '折叠全部代码'"
         @click="$emit('toggle-fold')"
       >
-        <UnfoldVertical v-if="isAllFolded" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-        <FoldVertical v-else class="w-3.5 h-3.5" />
+        <UnfoldVertical
+          v-if="isAllFolded"
+          class="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"
+        />
+        <FoldVertical v-else class="h-3.5 w-3.5" />
       </button>
 
       <!-- 自动换行切换按钮 -->
       <button
         v-if="showWrap"
         type="button"
-        class="p-1.5 rounded-md transition-all duration-150 active:scale-90 cursor-pointer"
+        class="cursor-pointer rounded-md p-1.5 transition-all duration-150 active:scale-90"
         :class="
           isWrapped
-            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50'
-            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800'
+            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
+            : 'text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
         "
         :title="isWrapped ? '关闭自动换行' : '开启自动换行'"
         @click="$emit('toggle-wrap')"
       >
-        <WrapText class="w-3.5 h-3.5" />
+        <WrapText class="h-3.5 w-3.5" />
       </button>
 
       <!-- 查找/搜索按钮 -->
       <button
         v-if="showSearch !== false"
         type="button"
-        class="p-1.5 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-all duration-150 active:scale-90 cursor-pointer"
+        class="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-all duration-150 hover:bg-zinc-200/60 hover:text-zinc-800 active:scale-90 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         title="搜索 (Cmd+F / Ctrl+F)"
         @click="$emit('search')"
       >
-        <Search class="w-3.5 h-3.5" />
+        <Search class="h-3.5 w-3.5" />
       </button>
 
       <!-- 清空按钮 -->
       <button
         v-if="clearable && !readonly && hasContent"
         type="button"
-        class="p-1.5 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-150 active:scale-90 cursor-pointer"
+        class="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-all duration-150 hover:bg-red-50 hover:text-red-600 active:scale-90 dark:text-zinc-400 dark:hover:bg-red-950/30 dark:hover:text-red-400"
         title="清空内容"
         @click="$emit('clear')"
       >
-        <Trash2 class="w-3.5 h-3.5" />
+        <Trash2 class="h-3.5 w-3.5" />
       </button>
 
       <!-- 打开本地文件按钮 -->
       <button
         v-if="showOpen && !readonly"
         type="button"
-        class="p-1.5 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-all duration-150 active:scale-90 cursor-pointer"
+        class="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-all duration-150 hover:bg-zinc-200/60 hover:text-zinc-800 active:scale-90 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         title="打开本地文件"
         @click="$emit('open')"
       >
-        <FolderOpen class="w-3.5 h-3.5 shrink-0" />
+        <FolderOpen class="h-3.5 w-3.5 shrink-0" />
       </button>
 
       <!-- 一键内容复制按钮 (统一为纯图标按钮，样式与清空等统一) -->
       <button
         v-if="showCopy"
         type="button"
-        class="p-1.5 rounded-md transition-all duration-150 active:scale-90 cursor-pointer"
+        class="cursor-pointer rounded-md p-1.5 transition-all duration-150 active:scale-90"
         :class="
           copied
-            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50'
-            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800'
+            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
+            : 'text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
         "
         :title="copied ? '已复制到剪贴板' : '复制代码内容'"
         @click="$emit('copy')"
       >
-        <Check v-if="copied" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <Copy v-else class="w-3.5 h-3.5 shrink-0" />
+        <Check v-if="copied" class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <Copy v-else class="h-3.5 w-3.5 shrink-0" />
       </button>
 
       <!-- 一键内容下载按钮 -->
       <button
         v-if="showDownload"
         type="button"
-        class="p-1.5 rounded-md transition-all duration-150 active:scale-90 cursor-pointer"
+        class="cursor-pointer rounded-md p-1.5 transition-all duration-150 active:scale-90"
         :class="
           downloaded
-            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50'
-            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800'
+            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
+            : 'text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
         "
         :title="downloaded ? '已开始下载' : '下载代码文件'"
         @click="$emit('download')"
       >
-        <Check v-if="downloaded" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <Download v-else class="w-3.5 h-3.5 shrink-0" />
+        <Check
+          v-if="downloaded"
+          class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+        />
+        <Download v-else class="h-3.5 w-3.5 shrink-0" />
       </button>
 
       <!-- 插槽：右侧末尾 -->

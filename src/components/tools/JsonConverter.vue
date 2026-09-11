@@ -3,10 +3,7 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import CodeEditor, { type CodeLanguage } from '../editor/CodeEditor.vue'
 import YAML from 'yaml'
 import { XMLParser, XMLBuilder } from 'fast-xml-parser'
-import {
-  ArrowLeftRight,
-  ArrowRight
-} from '@lucide/vue'
+import { ArrowLeftRight, ArrowRight } from '@lucide/vue'
 import { UiButton, UiSegmented, UiCheckbox, UiSplitPane } from '../ui'
 import { jsonToCsv, csvToJson, type CsvArrayFormat } from '../../utils/csv-converter'
 
@@ -58,7 +55,10 @@ function executeConversion() {
           format: true,
           indentBy: '  '
         })
-        const wrapped = typeof parsed === 'object' && !Array.isArray(parsed) ? { root: parsed } : { root: { item: parsed } }
+        const wrapped =
+          typeof parsed === 'object' && !Array.isArray(parsed)
+            ? { root: parsed }
+            : { root: { item: parsed } }
         targetContent.value = builder.build(wrapped)
       } else if (selectedFormat.value === 'csv') {
         targetContent.value = jsonToCsv(parsed, {
@@ -122,12 +122,9 @@ watch(
   }
 )
 
-watch(
-  [selectedFormat, direction, csvFlatten, csvArrayFormat],
-  () => {
-    runConversion(true)
-  }
-)
+watch([selectedFormat, direction, csvFlatten, csvArrayFormat], () => {
+  runConversion(true)
+})
 
 onBeforeUnmount(() => {
   if (debounceTimer) {
@@ -138,30 +135,28 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-full min-h-full flex-1 flex flex-col min-h-0 w-full gap-2.5">
+  <div class="flex h-full min-h-0 min-h-full w-full flex-1 flex-col gap-2.5">
     <!-- 工具栏 -->
-    <div class="flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xs shrink-0">
+    <div
+      class="flex shrink-0 flex-wrap items-center justify-between gap-2.5 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-xs dark:border-zinc-800 dark:bg-[#121215]"
+    >
       <div class="flex flex-wrap items-center gap-2">
         <!-- 格式选择 -->
-        <UiSegmented
-          v-model="selectedFormat"
-          :options="['yaml', 'xml', 'csv']"
-          uppercase
-        />
+        <UiSegmented v-model="selectedFormat" :options="['yaml', 'xml', 'csv']" uppercase />
 
         <!-- 转换方向切换 -->
-        <UiButton
-          variant="secondary"
-          class="shrink-0"
-          @click="handleSwapDirection"
-        >
+        <UiButton variant="secondary" class="shrink-0" @click="handleSwapDirection">
           <template #prefix>
-            <ArrowLeftRight class="w-3.5 h-3.5 text-emerald-500" />
+            <ArrowLeftRight class="h-3.5 w-3.5 text-emerald-500" />
           </template>
           <span class="flex items-center gap-1.5 whitespace-nowrap">
-            <span>{{ direction === 'json-to-format' ? 'JSON' : selectedFormat.toUpperCase() }}</span>
-            <ArrowRight class="w-3 h-3 text-zinc-400" />
-            <span>{{ direction === 'json-to-format' ? selectedFormat.toUpperCase() : 'JSON' }}</span>
+            <span>{{
+              direction === 'json-to-format' ? 'JSON' : selectedFormat.toUpperCase()
+            }}</span>
+            <ArrowRight class="h-3 w-3 text-zinc-400" />
+            <span>{{
+              direction === 'json-to-format' ? selectedFormat.toUpperCase() : 'JSON'
+            }}</span>
           </span>
         </UiButton>
 
@@ -171,13 +166,16 @@ onBeforeUnmount(() => {
           v-model="csvFlatten"
           size="sm"
           title="勾选时展开嵌套对象（如 userInfo.userId），取消勾选时对象保留为 JSON 字符串"
-          class="h-8 px-2.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60 rounded-lg transition-colors box-border shrink-0 whitespace-nowrap"
+          class="box-border h-8 shrink-0 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 text-xs whitespace-nowrap text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700/60 dark:bg-zinc-800/60 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         >
           扁平化对象
         </UiCheckbox>
 
         <!-- CSV 数组字段处理选项 -->
-        <div v-if="selectedFormat === 'csv'" class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 h-8">
+        <div
+          v-if="selectedFormat === 'csv'"
+          class="flex h-8 items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400"
+        >
           <span class="shrink-0 select-none">数组字段:</span>
           <UiSegmented
             v-model="csvArrayFormat"

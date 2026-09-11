@@ -285,14 +285,14 @@ defineExpose<CodeEditorExpose>({
 
 <template>
   <div
-    class="code-editor-container flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215] transition-colors shadow-2xs overflow-hidden relative outline-none"
+    class="code-editor-container relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xs transition-colors outline-none dark:border-zinc-800 dark:bg-[#121215]"
     :class="[
-      fillHeight ? 'w-full h-full flex-1 min-h-0' : 'relative w-full',
+      fillHeight ? 'h-full min-h-0 w-full flex-1' : 'relative w-full',
       props.class,
       readonly
         ? 'bg-zinc-50/40 dark:bg-zinc-900/40'
         : 'focus-within:border-emerald-500 dark:focus-within:border-emerald-500',
-      isDraggingFile ? 'ring-2 ring-emerald-500 border-emerald-500' : ''
+      isDraggingFile ? 'border-emerald-500 ring-2 ring-emerald-500' : ''
     ]"
     tabindex="-1"
     @keydown="handleKeyDown"
@@ -358,12 +358,10 @@ defineExpose<CodeEditorExpose>({
     <!-- 编辑器核心 Host 挂载节点 -->
     <div
       ref="editorHost"
-      class="editor-host relative w-full min-h-0"
-      :class="[
-        autoHeight ? 'cm-auto-height' : 'cm-scroll-height flex-1 overflow-hidden'
-      ]"
+      class="editor-host relative min-h-0 w-full"
+      :class="[autoHeight ? 'cm-auto-height' : 'cm-scroll-height flex-1 overflow-hidden']"
       :style="{
-        height: (fillHeight || autoHeight) ? undefined : maxHeightRem,
+        height: fillHeight || autoHeight ? undefined : maxHeightRem,
         minHeight: minHeightRem,
         maxHeight: maxHeightRem
       }"
@@ -372,9 +370,9 @@ defineExpose<CodeEditorExpose>({
     <!-- 拖拽文件进入悬浮提示遮罩 -->
     <div
       v-if="isDraggingFile"
-      class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-emerald-50/95 dark:bg-emerald-950/95 backdrop-blur-xs border-2 border-dashed border-emerald-500 rounded-xl pointer-events-none transition-all select-none gap-1"
+      class="pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-emerald-500 bg-emerald-50/95 backdrop-blur-xs transition-all select-none dark:bg-emerald-950/95"
     >
-      <FolderOpen class="w-8 h-8 text-emerald-600 dark:text-emerald-400 animate-bounce mb-1" />
+      <FolderOpen class="mb-1 h-8 w-8 animate-bounce text-emerald-600 dark:text-emerald-400" />
       <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
         释放鼠标以载入该文件
       </p>

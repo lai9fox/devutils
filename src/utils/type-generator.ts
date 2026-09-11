@@ -4,12 +4,14 @@
  */
 
 function toPascalCase(str: string): string {
-  return str
-    .replace(/[^a-zA-Z0-9]/g, ' ')
-    .split(' ')
-    .filter(Boolean)
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join('') || 'Item'
+  return (
+    str
+      .replace(/[^a-zA-Z0-9]/g, ' ')
+      .split(' ')
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join('') || 'Item'
+  )
 }
 
 function toCamelCase(str: string): string {
@@ -118,11 +120,7 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
         const jsonAnnotation = `@JsonProperty("${key}") `
         fieldList.push(`    ${jsonAnnotation}${fieldType} ${fieldName}`)
       }
-      const recordStr = [
-        `public record ${name}(`,
-        fieldList.join(',\n'),
-        `) {}`
-      ].join('\n')
+      const recordStr = [`public record ${name}(`, fieldList.join(',\n'), `) {}`].join('\n')
       classes.push(recordStr)
       return
     }
@@ -148,9 +146,7 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
     }
 
     // Default: Standard POJO
-    const lines: string[] = [
-      `public class ${name} {`
-    ]
+    const lines: string[] = [`public class ${name} {`]
     const fields: { key: string; name: string; type: string }[] = []
 
     for (const [key, val] of entries) {
@@ -183,9 +179,7 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
     classes.push(lines.join('\n'))
   }
 
-  const importList: string[] = [
-    'import com.fasterxml.jackson.annotation.JsonProperty;'
-  ]
+  const importList: string[] = ['import com.fasterxml.jackson.annotation.JsonProperty;']
 
   if (style === 'lombok') {
     importList.push('import lombok.Data;')

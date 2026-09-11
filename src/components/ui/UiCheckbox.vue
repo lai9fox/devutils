@@ -34,7 +34,7 @@ const props = withDefaults(
     id: undefined,
     name: undefined,
     title: undefined,
-    checkboxClass: '',
+    checkboxClass: ''
   }
 )
 
@@ -56,27 +56,30 @@ const isChecked = computed(() => {
 const hasLabel = computed(() => Boolean(props.label || slots.default))
 const hasDescription = computed(() => Boolean(props.description || slots.description))
 
-const sizeConfig: Record<CheckboxSize, {
-  container: string
-  box: string
-  icon: string
-  label: string
-  description: string
-}> = {
+const sizeConfig: Record<
+  CheckboxSize,
+  {
+    container: string
+    box: string
+    icon: string
+    label: string
+    description: string
+  }
+> = {
   sm: {
     container: 'gap-1.5 text-xs',
     box: 'w-4 h-4 rounded-[5px]',
     icon: 'w-3 h-3 stroke-[2.5]',
     label: 'text-xs leading-4 select-none',
-    description: 'text-[11px] select-none',
+    description: 'text-[11px] select-none'
   },
   md: {
     container: 'gap-2 text-sm',
     box: 'w-5 h-5 rounded-md',
     icon: 'w-3.5 h-3.5 stroke-[2.5]',
     label: 'text-sm leading-5 select-none',
-    description: 'text-xs select-none',
-  },
+    description: 'text-xs select-none'
+  }
 }
 
 const computedBoxClasses = computed(() => [
@@ -87,7 +90,7 @@ const computedBoxClasses = computed(() => [
     : 'bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 group-hover:border-zinc-400 dark:group-hover:border-zinc-600',
   'peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 dark:peer-focus-visible:ring-emerald-400 peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-offset-zinc-950',
   props.disabled && 'opacity-50 cursor-not-allowed',
-  props.checkboxClass,
+  props.checkboxClass
 ])
 
 function handleChange(e: Event) {
@@ -114,7 +117,7 @@ function handleChange(e: Event) {
 defineExpose({
   inputRef,
   focus: () => inputRef.value?.focus(),
-  blur: () => inputRef.value?.blur(),
+  blur: () => inputRef.value?.blur()
 })
 </script>
 
@@ -123,14 +126,14 @@ defineExpose({
     :for="id"
     :title="title"
     :class="[
-      'inline-flex cursor-pointer select-none group transition-colors',
+      'group inline-flex cursor-pointer transition-colors select-none',
       hasDescription ? 'items-start' : 'items-center',
       sizeConfig[size].container,
-      disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '',
+      disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : ''
     ]"
   >
     <div
-      class="relative inline-flex items-center justify-center shrink-0"
+      class="relative inline-flex shrink-0 items-center justify-center"
       :class="hasDescription ? 'mt-0.5' : ''"
     >
       <input
@@ -140,30 +143,21 @@ defineExpose({
         :name="name"
         :checked="isChecked"
         :disabled="disabled"
-        class="sr-only peer"
+        class="peer sr-only"
         @change="handleChange"
       />
       <div :class="computedBoxClasses" aria-hidden="true">
-        <Minus
-          v-if="indeterminate"
-          :class="sizeConfig[size].icon"
-        />
-        <Check
-          v-else-if="isChecked"
-          :class="sizeConfig[size].icon"
-        />
+        <Minus v-if="indeterminate" :class="sizeConfig[size].icon" />
+        <Check v-else-if="isChecked" :class="sizeConfig[size].icon" />
       </div>
     </div>
 
-    <div
-      v-if="hasLabel || hasDescription"
-      class="inline-flex flex-col min-w-0"
-    >
+    <div v-if="hasLabel || hasDescription" class="inline-flex min-w-0 flex-col">
       <span
         v-if="hasLabel"
         :class="[
-          'font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors',
-          sizeConfig[size].label,
+          'font-medium text-zinc-700 transition-colors group-hover:text-zinc-900 dark:text-zinc-300 dark:group-hover:text-zinc-100',
+          sizeConfig[size].label
         ]"
       >
         <slot>{{ label }}</slot>
@@ -172,8 +166,8 @@ defineExpose({
       <span
         v-if="hasDescription"
         :class="[
-          'text-zinc-500 dark:text-zinc-400 mt-1 leading-normal',
-          sizeConfig[size].description,
+          'mt-1 leading-normal text-zinc-500 dark:text-zinc-400',
+          sizeConfig[size].description
         ]"
       >
         <slot name="description">{{ description }}</slot>

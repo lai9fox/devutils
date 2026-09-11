@@ -23,7 +23,7 @@ const props = withDefaults(
     readonly: false,
     mono: false,
     size: 'sm',
-    inputClass: '',
+    inputClass: ''
   }
 )
 
@@ -41,7 +41,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const sizeClasses: Record<InputSize, string> = {
   sm: 'h-8 text-xs rounded-lg',
   md: 'h-9 text-sm rounded-lg',
-  lg: 'h-10 text-sm rounded-xl',
+  lg: 'h-10 text-sm rounded-xl'
 }
 
 const computedInputClasses = computed(() => [
@@ -55,7 +55,7 @@ const computedInputClasses = computed(() => [
   props.mono ? 'font-mono' : '',
   slots.prefix ? 'pl-8' : 'pl-2.5',
   slots.suffix ? 'pr-8' : 'pr-2.5',
-  props.inputClass,
+  props.inputClass
 ])
 
 function handleInput(e: Event) {
@@ -66,15 +66,15 @@ function handleInput(e: Event) {
 defineExpose({
   inputRef,
   focus: () => inputRef.value?.focus(),
-  blur: () => inputRef.value?.blur(),
+  blur: () => inputRef.value?.blur()
 })
 </script>
 
 <template>
-  <div class="relative flex items-center w-full">
+  <div class="relative flex w-full items-center">
     <div
       v-if="$slots.prefix"
-      class="absolute left-2.5 flex items-center pointer-events-none text-zinc-400 z-10"
+      class="pointer-events-none absolute left-2.5 z-10 flex items-center text-zinc-400"
     >
       <slot name="prefix" />
     </div>
@@ -92,12 +92,9 @@ defineExpose({
       @focus="emit('focus', $event)"
       @blur="emit('blur', $event)"
       @keydown="emit('keydown', $event)"
-    >
+    />
 
-    <div
-      v-if="$slots.suffix"
-      class="absolute right-2 flex items-center z-10"
-    >
+    <div v-if="$slots.suffix" class="absolute right-2 z-10 flex items-center">
       <slot name="suffix" />
     </div>
   </div>

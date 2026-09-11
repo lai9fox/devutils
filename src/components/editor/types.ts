@@ -46,10 +46,10 @@ export interface CodeEditorProps {
 
 export type CodeEditorEmits = {
   'update:modelValue': [value: string]
-  'copy': [value: string]
-  'download': [filename: string, content: string]
+  copy: [value: string]
+  download: [filename: string, content: string]
   'open-file': [file: File, content: string]
-  'clear': []
+  clear: []
 }
 
 export interface CodeEditorExpose {
