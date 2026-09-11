@@ -9,7 +9,10 @@ import {
   Filter,
   FileType,
   ArrowLeftRight,
-  LayoutGrid
+  LayoutGrid,
+  Binary,
+  Image,
+  FileDigit
 } from '@lucide/vue'
 import { UiButton, UiInput } from '../ui'
 
@@ -52,6 +55,12 @@ function getIconComponent(icon: string) {
       return FileType
     case 'ArrowLeftRight':
       return ArrowLeftRight
+    case 'Binary':
+      return Binary
+    case 'Image':
+      return Image
+    case 'FileDigit':
+      return FileDigit
     default:
       return AlignLeft
   }

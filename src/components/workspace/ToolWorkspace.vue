@@ -7,6 +7,9 @@ import JsonValidator from '../tools/JsonValidator.vue'
 import JsonPath from '../tools/JsonPath.vue'
 import JsonConverter from '../tools/JsonConverter.vue'
 import JsonToTypes from '../tools/JsonToTypes.vue'
+import Base64Codec from '../tools/Base64Codec.vue'
+import Base64Image from '../tools/Base64Image.vue'
+import Base64File from '../tools/Base64File.vue'
 import {
   AlignLeft,
   FolderTree,
@@ -14,6 +17,9 @@ import {
   Filter,
   ArrowLeftRight,
   FileType,
+  Binary,
+  Image,
+  FileDigit,
   Search,
   PanelLeftClose,
   PanelLeft,
@@ -178,6 +184,12 @@ function getToolComponent(id: string) {
       return JsonConverter
     case 'json-to-types':
       return JsonToTypes
+    case 'base64-text':
+      return Base64Codec
+    case 'base64-image':
+      return Base64Image
+    case 'base64-file':
+      return Base64File
     default:
       return JsonFormatter
   }
@@ -197,6 +209,12 @@ function getIconComponent(icon: string) {
       return ArrowLeftRight
     case 'FileType':
       return FileType
+    case 'Binary':
+      return Binary
+    case 'Image':
+      return Image
+    case 'FileDigit':
+      return FileDigit
     default:
       return AlignLeft
   }

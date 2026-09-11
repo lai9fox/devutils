@@ -1,4 +1,4 @@
-export type ToolCategoryId = 'format-view' | 'validate-query' | 'convert-types'
+export type ToolCategoryId = 'format-view' | 'validate-query' | 'convert-types' | 'encode-decode'
 
 export interface ToolCategory {
   id: ToolCategoryId

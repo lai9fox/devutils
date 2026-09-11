@@ -16,7 +16,8 @@ export async function getStaticPaths() {
     { oldId: 'json-schema-validator', targetId: 'json-validator' },
     { oldId: 'json-diff', targetId: 'json-formatter' },
     { oldId: 'json-escaper', targetId: 'json-formatter' },
-    { oldId: 'json-path-extractor', targetId: 'json-path' }
+    { oldId: 'json-path-extractor', targetId: 'json-path' },
+    { oldId: 'base64', targetId: 'base64-text' }
   ]
 
   for (const alias of legacyAliases) {

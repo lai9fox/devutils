@@ -12,6 +12,9 @@ import {
   Filter,
   FileType,
   ArrowLeftRight,
+  Binary,
+  Image,
+  FileDigit,
   ArrowUp,
   ArrowDown,
   CornerDownLeft
@@ -62,6 +65,12 @@ function getIconComponent(icon: string) {
       return FileType
     case 'ArrowLeftRight':
       return ArrowLeftRight
+    case 'Binary':
+      return Binary
+    case 'Image':
+      return Image
+    case 'FileDigit':
+      return FileDigit
     default:
       return AlignLeft
   }

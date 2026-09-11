@@ -19,6 +19,12 @@ export const toolCategories: ToolCategory[] = [
     name: '转换与代码生成',
     description: 'TypeScript / Java / Go 类型生成、YAML / XML / CSV 多格式双向互转',
     icon: 'Code2'
+  },
+  {
+    id: 'encode-decode',
+    name: '编解码与安全',
+    description: 'Base64 文本编解码、图片 Base64 转换与文件 Base64 还原',
+    icon: 'Binary'
   }
 ]
 
@@ -147,6 +153,83 @@ export const tools: ToolMeta[] = [
       '一键将 JSON 数据转换为强类型代码模型，支持 TypeScript、Java POJO / Record / Lombok、Go Struct。',
     featured: true,
     order: 60
+  },
+  {
+    id: 'base64-text',
+    path: '/base64-text',
+    category: 'encode-decode',
+    icon: 'Binary',
+    name: 'Base64 编码 / 解码',
+    shortName: 'Base64 编解码',
+    description:
+      '支持 UTF-8/Unicode、Emoji、Base64URL、自动识别与补齐填充符，提供实时双向转换与 Hex 互转',
+    keywords: [
+      'base64',
+      'base64url',
+      'base64 encode',
+      'base64 decode',
+      '编码',
+      '解码',
+      'utf-8',
+      'emoji',
+      'url safe',
+      'hex to base64'
+    ],
+    tags: ['UTF-8 / Emoji', 'Base64URL', '自动检测'],
+    seoTitle: 'Base64 编码 / 解码 - 文本与 Base64 / Base64URL 在线转换 - DevUtils',
+    seoDescription:
+      '快速、安全的在线 Base64 编码与解码工具，支持标准 Base64、Base64URL、中文与 Emoji、Padding 填充处理，纯本地运行。',
+    featured: true,
+    order: 70
+  },
+  {
+    id: 'base64-image',
+    path: '/base64-image',
+    category: 'encode-decode',
+    icon: 'Image',
+    name: '图片 Base64',
+    shortName: '图片转 Base64',
+    description:
+      '图片拖拽上传与即时 Base64 / Data URL 互转，支持透明背景预览、分辨率与膨胀比统计、HTML/CSS 导出',
+    keywords: [
+      'image to base64',
+      'base64 to image',
+      'data url',
+      '图片转base64',
+      'base64图片预览',
+      '图片解码',
+      'css background'
+    ],
+    tags: ['Data URL', '即时预览', 'HTML/CSS 导出'],
+    seoTitle: '图片 Base64 - 图片与 Base64 / Data URL 互转预览 - DevUtils',
+    seoDescription:
+      '在线图片 Base64 转换与即时预览工具，支持拖拽、剪贴板粘贴、查看宽高与体积膨胀比，一键复制 Data URL 与 CSS 代码。',
+    featured: true,
+    order: 80
+  },
+  {
+    id: 'base64-file',
+    path: '/base64-file',
+    category: 'encode-decode',
+    icon: 'FileDigit',
+    name: '文件 Base64',
+    shortName: '文件转 Base64',
+    description:
+      '任意文件与 Base64 双向转换，基于 Magic Number 智能识别 MIME 类型，支持一键还原下载与体积统计',
+    keywords: [
+      'file to base64',
+      'base64 to file',
+      '文件转base64',
+      'base64还原文件',
+      'mime detection',
+      '文件下载'
+    ],
+    tags: ['任意文件', 'MIME 识别', '还原下载'],
+    seoTitle: '文件 Base64 - 任意文件与 Base64 互转及文件还原 - DevUtils',
+    seoDescription:
+      '纯本地运行的文件 Base64 转换工具，支持 PDF、压缩包等任意文件拖拽转 Base64，或通过 Base64 智能识别 MIME 并还原下载。',
+    featured: true,
+    order: 90
   }
 ]
 
