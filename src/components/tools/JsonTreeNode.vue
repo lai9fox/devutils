@@ -4,7 +4,8 @@ import {
   ChevronRight,
   ChevronDown,
   Copy,
-  Check
+  Check,
+  Route
 } from '@lucide/vue'
 
 const props = defineProps<{
@@ -13,8 +14,6 @@ const props = defineProps<{
   path: string
   depth: number
   isLast?: boolean
-  searchQuery?: string
-  matchingPaths?: Set<string>
   autoExpandLevel?: number
   expandedSet?: Set<string>
 }>()
@@ -22,7 +21,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'select-path': [path: string, value: unknown]
   'toggle-expand': [path: string]
-  'copy-text': [text: string]
+  'copy-text': [text: string, type: 'path' | 'value']
 }>()
 
 const isObject = computed(() => props.value !== null && typeof props.value === 'object')
@@ -68,16 +67,6 @@ const isExpanded = computed(() => {
   return props.depth < (props.autoExpandLevel ?? 2)
 })
 
-const isKeyMatched = computed(() => {
-  if (!props.searchQuery || props.nodeKey === undefined) return false
-  return String(props.nodeKey).toLowerCase().includes(props.searchQuery.toLowerCase())
-})
-
-const isValueMatched = computed(() => {
-  if (!props.searchQuery || isObject.value) return false
-  return String(props.value).toLowerCase().includes(props.searchQuery.toLowerCase())
-})
-
 function toggleExpand() {
   emit('toggle-expand', props.path)
 }
@@ -86,8 +75,26 @@ function handleNodeClick() {
   emit('select-path', props.path, props.value)
 }
 
+const copiedField = ref<'path' | 'value' | null>(null)
+let copyTimer: ReturnType<typeof setTimeout> | null = null
+
 function copyPath() {
-  emit('copy-text', props.path)
+  emit('copy-text', props.path, 'path')
+  copiedField.value = 'path'
+  if (copyTimer) clearTimeout(copyTimer)
+  copyTimer = setTimeout(() => {
+    copiedField.value = null
+  }, 1200)
+}
+
+function copyValue() {
+  const text = typeof props.value === 'string' ? props.value : JSON.stringify(props.value)
+  emit('copy-text', text, 'value')
+  copiedField.value = 'value'
+  if (copyTimer) clearTimeout(copyTimer)
+  copyTimer = setTimeout(() => {
+    copiedField.value = null
+  }, 1200)
 }
 </script>
 
@@ -101,11 +108,13 @@ function copyPath() {
       <!-- 折叠/展开箭头 (仅针对 Object / Array) -->
       <button
         v-if="isObject"
-        class="w-4 h-4 -ml-1 flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer shrink-0 transition-transform"
+        class="w-4 h-4 -ml-1 flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer shrink-0"
         @click.stop="toggleExpand"
       >
-        <ChevronDown v-if="isExpanded" class="w-3.5 h-3.5" />
-        <ChevronRight v-else class="w-3.5 h-3.5" />
+        <ChevronRight
+          class="w-3.5 h-3.5 transition-transform duration-150 ease-out"
+          :class="isExpanded ? 'rotate-90' : 'rotate-0'"
+        />
       </button>
       <span v-else class="w-4 shrink-0" />
 
@@ -113,10 +122,7 @@ function copyPath() {
       <span
         v-if="nodeKey !== undefined"
         class="mr-1.5 font-medium shrink-0"
-        :class="[
-          isArray ? 'text-zinc-400' : 'text-zinc-800 dark:text-zinc-200',
-          isKeyMatched ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-0.5 rounded' : ''
-        ]"
+        :class="isArray ? 'text-zinc-400' : 'text-zinc-800 dark:text-zinc-200'"
       >
         <template v-if="!isArray">"{{ nodeKey }}":</template>
         <template v-else>[{{ nodeKey }}]:</template>
@@ -150,7 +156,6 @@ function copyPath() {
         <span
           v-if="typeof value === 'string'"
           class="text-emerald-600 dark:text-emerald-400 break-all"
-          :class="isValueMatched ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-0.5 rounded' : ''"
         >
           "{{ value }}"
         </span>
@@ -159,7 +164,6 @@ function copyPath() {
         <span
           v-else-if="typeof value === 'number'"
           class="text-sky-600 dark:text-sky-400 font-semibold"
-          :class="isValueMatched ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-0.5 rounded' : ''"
         >
           {{ value }}
         </span>
@@ -168,7 +172,6 @@ function copyPath() {
         <span
           v-else-if="typeof value === 'boolean'"
           class="text-amber-600 dark:text-amber-400 font-bold"
-          :class="isValueMatched ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-0.5 rounded' : ''"
         >
           {{ value }}
         </span>
@@ -190,21 +193,27 @@ function copyPath() {
       <!-- 尾部逗号 -->
       <span v-if="!isLast && (!isObject || !isExpanded)" class="text-zinc-400">,</span>
 
-      <!-- 悬停快捷复制按钮 -->
-      <div class="ml-auto opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0 pl-2 transition-opacity">
+      <!-- 悬停快捷复制按钮 (紧随值/逗号后方显示，无需大幅移动鼠标) -->
+      <div class="inline-flex items-center gap-0.5 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
         <button
-          class="px-1 py-0.5 text-[10px] text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 rounded cursor-pointer transition-colors"
-          title="复制当前 JSONPath"
+          type="button"
+          class="p-0.5 rounded text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70 cursor-pointer transition-colors"
+          :class="{ 'text-emerald-600 dark:text-emerald-400': copiedField === 'path' }"
+          title="复制路径 (JSONPath)"
           @click.stop="copyPath"
         >
-          路径
+          <Check v-if="copiedField === 'path'" class="w-3 h-3 text-emerald-500" />
+          <Route v-else class="w-3 h-3" />
         </button>
         <button
-          class="px-1 py-0.5 text-[10px] text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 rounded cursor-pointer transition-colors"
-          title="复制当前节点值"
-          @click.stop="emit('copy-text', typeof value === 'string' ? value : JSON.stringify(value))"
+          type="button"
+          class="p-0.5 rounded text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70 cursor-pointer transition-colors"
+          :class="{ 'text-emerald-600 dark:text-emerald-400': copiedField === 'value' }"
+          title="复制节点值"
+          @click.stop="copyValue"
         >
-          值
+          <Check v-if="copiedField === 'value'" class="w-3 h-3 text-emerald-500" />
+          <Copy v-else class="w-3 h-3" />
         </button>
       </div>
     </div>
@@ -222,13 +231,11 @@ function copyPath() {
         :path="isArray ? `${path}[${k}]` : `${path}.${k}`"
         :depth="depth + 1"
         :is-last="idx === childEntries.length - 1"
-        :search-query="searchQuery"
-        :matching-paths="matchingPaths"
         :auto-expand-level="autoExpandLevel"
         :expanded-set="expandedSet"
         @select-path="(p, val) => emit('select-path', p, val)"
         @toggle-expand="(p) => emit('toggle-expand', p)"
-        @copy-text="(t) => emit('copy-text', t)"
+        @copy-text="(t, type) => emit('copy-text', t, type)"
       />
 
       <!-- 闭合符号 -->

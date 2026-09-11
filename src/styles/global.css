@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --color-bg: #fafafa;
@@ -17,21 +19,58 @@
 
   .dark {
     --color-bg: #09090b;
-    --color-surface: #121215;
-    --color-surface-hover: #1c1c21;
-    --color-border: #27272a;
-    --color-border-subtle: #18181b;
+    --color-surface: #121216;
+    --color-surface-hover: #1c1c22;
+    --color-border: #333338;
+    --color-border-subtle: #202025;
     --color-text: #f4f4f5;
     --color-text-muted: #a1a1aa;
     --color-text-dimmed: #71717a;
     --color-primary: #10b981;
     --color-primary-hover: #34d399;
     --color-accent: #34d399;
+
+    /* 提升暗色模式下边框对比度与层级感 */
+    --color-zinc-800: #2e2e34;
+    --color-zinc-700: #42424a;
+  }
+
+  /* 全局基准 outline-color 绑定主题色，杜绝 Tab 聚焦过渡时由 currentColor (黑/白) 产生颜色闪烁 */
+  *,
+  *::before,
+  *::after {
+    outline-color: var(--color-primary);
   }
 
   html {
     scroll-behavior: smooth;
-    color-scheme: light dark;
+    color-scheme: light;
+    background-color: var(--color-bg);
+    scrollbar-color: rgba(160, 160, 160, 0.3) transparent;
+    scrollbar-gutter: stable;
+    overscroll-behavior-y: none;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    background-color: var(--color-bg);
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+    scrollbar-gutter: stable;
+    overscroll-behavior-y: none;
+  }
+
+  @media (max-width: 1023px) {
+    html,
+    html.dark {
+      scrollbar-gutter: auto;
+    }
+  }
+
+  /* 主题切换时全局禁用局部 CSS transition，消除背景/卡片速度不一的割裂感 */
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition: none !important;
   }
 
   body {
@@ -42,10 +81,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
+    overscroll-behavior-y: none;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - 滚动条中性配色，杜绝主题色渗漏 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -64,9 +104,75 @@
   background: rgba(160, 160, 160, 0.45);
 }
 
-/* Code editor styles override */
-.cm-editor {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
-  font-size: 13.5px !important;
-  line-height: 1.6 !important;
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* 全局键盘 Tab 聚焦外边框：统一使用主题色 */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 避免 CodeMirror 编辑器内部光标与无边框搜索框受全局 outline 干扰 */
+.cm-editor :focus-visible,
+.cm-editor:focus-visible,
+.cm-content:focus-visible,
+.cm-line:focus-visible,
+input.focus\:outline-none:focus-visible {
+  outline: none;
+}
+
+/* View Transitions for Header & Toolbar Elements */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.25s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-group(devutils-site-logo),
+::view-transition-group(devutils-search-trigger),
+::view-transition-group(devutils-theme-toggle),
+::view-transition-group(devutils-github-link) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(devutils-site-logo),
+::view-transition-new(devutils-site-logo),
+::view-transition-old(devutils-search-trigger),
+::view-transition-new(devutils-search-trigger),
+::view-transition-old(devutils-theme-toggle),
+::view-transition-new(devutils-theme-toggle),
+::view-transition-old(devutils-github-link),
+::view-transition-new(devutils-github-link) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(devutils-site-logo),
+  ::view-transition-group(devutils-search-trigger),
+  ::view-transition-group(devutils-theme-toggle),
+  ::view-transition-group(devutils-github-link) {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.12s ease-out;
 }

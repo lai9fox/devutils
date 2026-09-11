@@ -5,11 +5,7 @@ import { Terminal, ShieldCheck, Zap, Code2, ArrowRight } from "@lucide/vue";
 <section
   class="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 border-b border-zinc-200 dark:border-zinc-800"
 >
-  <!-- 渐变光晕背景 -->
-  <div
-    class="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-[600px] h-[300px] bg-gradient-to-b from-emerald-500/10 via-teal-500/5 to-transparent blur-3xl rounded-full pointer-events-none"
-  >
-  </div>
+
 
   <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center">
     <!-- 顶部小徽章 -->
@@ -41,7 +37,7 @@ import { Terminal, ShieldCheck, Zap, Code2, ArrowRight } from "@lucide/vue";
     <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
       <a
         href="/json-formatter"
-        class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition-all shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 cursor-pointer"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition-[background-color,box-shadow] shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 cursor-pointer"
       >
         <span>进入工具工作台</span>
         <ArrowRight class="w-4 h-4" />

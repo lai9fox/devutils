@@ -11,6 +11,7 @@ import {
   ArrowLeftRight,
   LayoutGrid
 } from '@lucide/vue'
+import { UiButton, UiInput } from '../ui'
 
 const selectedCategory = ref<'all' | ToolCategoryId>('all')
 const searchQuery = ref('')
@@ -66,40 +67,41 @@ function getIconComponent(icon: string) {
     <!-- 搜索与分类筛选栏 -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <!-- 分类 Tabs -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-        <button
-          class="inline-flex items-center gap-1.5 px-3.5 h-8 text-xs font-medium rounded-lg transition-all cursor-pointer shrink-0"
-          :class="selectedCategory === 'all'
-            ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-zinc-950 shadow-xs shadow-emerald-500/20'
-            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'"
+      <div class="flex items-center gap-1.5 overflow-x-auto p-1.5 -m-1.5">
+        <UiButton
+          :variant="selectedCategory === 'all' ? 'primary' : 'secondary'"
+          size="sm"
+          class="shrink-0"
           @click="selectedCategory = 'all'"
         >
-          <LayoutGrid class="w-3.5 h-3.5" />
+          <template #prefix>
+            <LayoutGrid class="w-3.5 h-3.5" />
+          </template>
           <span>全部 ({{ tools.length }})</span>
-        </button>
+        </UiButton>
 
-        <button
+        <UiButton
           v-for="cat in toolCategories"
           :key="cat.id"
-          class="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-medium rounded-lg transition-all cursor-pointer shrink-0"
-          :class="selectedCategory === cat.id
-            ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-zinc-950 shadow-xs shadow-emerald-500/20'
-            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'"
+          :variant="selectedCategory === cat.id ? 'primary' : 'secondary'"
+          size="sm"
+          class="shrink-0"
           @click="selectedCategory = cat.id"
         >
           <span>{{ cat.name }}</span>
-        </button>
+        </UiButton>
       </div>
 
       <!-- 搜索框 -->
-      <div class="relative w-full md:w-72">
-        <input
+      <div class="w-full md:w-72">
+        <UiInput
           v-model="searchQuery"
-          type="text"
           placeholder="搜索工具、格式或关键词..."
-          class="w-full h-8 pl-9 pr-4 text-xs rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 shadow-xs transition-colors"
         >
-        <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <template #prefix>
+            <Search class="w-3.5 h-3.5" />
+          </template>
+        </UiInput>
       </div>
     </div>
 
@@ -112,15 +114,18 @@ function getIconComponent(icon: string) {
         v-for="tool in filteredTools"
         :key="tool.id"
         :href="tool.path"
-        class="group relative flex flex-col justify-between p-5 rounded-2xl bg-white dark:bg-zinc-900/70 border border-zinc-200/90 dark:border-zinc-800/80 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
+        class="group relative flex flex-col justify-between p-5 rounded-2xl bg-white dark:bg-[#121215] border border-zinc-200/90 dark:border-zinc-800 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 transition-[transform,border-color,box-shadow] duration-200 cursor-pointer"
       >
         <!-- 背景微光悬浮层 -->
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+        <!-- 悬浮上移防抖缓冲桥：填补向上位移留出的边缘缝隙，杜绝鼠标在底部边框处反复触发/丢失 hover 的死循环抖动 -->
+        <div class="absolute inset-x-0 -bottom-2 h-2 pointer-events-none group-hover:pointer-events-auto" aria-hidden="true" />
 
         <div class="relative">
           <!-- 头部: 图标、名称、类型同一区块 -->
           <div class="flex items-center gap-3">
-            <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200/60 dark:border-zinc-700/60 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/40 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:border-emerald-500/30 transition-all duration-200 shadow-xs shrink-0">
+            <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200/60 dark:border-zinc-700/60 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/40 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:border-emerald-500/30 transition-colors duration-200 shadow-xs shrink-0">
               <component :is="getIconComponent(tool.icon)" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
             </span>
 
