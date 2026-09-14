@@ -2,21 +2,29 @@
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import CodeEditor, { type CodeLanguage } from '../editor/CodeEditor.vue'
 import YAML from 'yaml'
-import { XMLParser, XMLBuilder } from 'fast-xml-parser'
-import { ArrowLeftRight, ArrowRight } from '@lucide/vue'
+import { XMLParser, XMLBuilder, XMLValidator } from 'fast-xml-parser'
+import { ArrowLeftRight, ArrowRight, AlertCircle } from '@lucide/vue'
 import { UiButton, UiSegmented, UiCheckbox, UiSplitPane } from '../ui'
 import { jsonToCsv, csvToJson, type CsvArrayFormat } from '../../utils/csv-converter'
+import { getToolDraft, setToolDraft } from '../../utils/toolDrafts'
 
 type Format = 'yaml' | 'xml' | 'csv'
 type Direction = 'json-to-format' | 'format-to-json'
 
-const selectedFormat = ref<Format>('yaml')
-const direction = ref<Direction>('json-to-format')
-const csvFlatten = ref(true)
-const csvArrayFormat = ref<CsvArrayFormat>('stringify')
+const selectedFormat = ref<Format>(getToolDraft('json-converter:format', 'yaml'))
+const direction = ref<Direction>(getToolDraft('json-converter:direction', 'json-to-format'))
+const csvFlatten = ref(getToolDraft('json-converter:csvFlatten', true))
+const csvArrayFormat = ref<CsvArrayFormat>(getToolDraft('json-converter:csvArrayFormat', 'stringify'))
 
-const sourceContent = ref('')
+const sourceContent = ref(getToolDraft('json-converter:source', ''))
 const targetContent = ref('')
+const conversionError = ref<string | null>(null)
+
+watch(selectedFormat, (val) => setToolDraft('json-converter:format', val))
+watch(direction, (val) => setToolDraft('json-converter:direction', val))
+watch(csvFlatten, (val) => setToolDraft('json-converter:csvFlatten', val))
+watch(csvArrayFormat, (val) => setToolDraft('json-converter:csvArrayFormat', val))
+watch(sourceContent, (val) => setToolDraft('json-converter:source', val))
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -40,10 +48,12 @@ function executeConversion() {
   const input = sourceContent.value.trim()
   if (!input) {
     targetContent.value = ''
+    conversionError.value = null
     return
   }
 
   try {
+    conversionError.value = null
     if (direction.value === 'json-to-format') {
       const parsed = JSON.parse(input)
 
@@ -72,6 +82,14 @@ function executeConversion() {
         const parsed = YAML.parse(input)
         targetContent.value = JSON.stringify(parsed, null, 2)
       } else if (selectedFormat.value === 'xml') {
+        const validation = XMLValidator.validate(input)
+        if (validation !== true) {
+          const errDetail =
+            typeof validation === 'object' && validation.err
+              ? `${validation.err.msg} (第 ${validation.err.line} 行，第 ${validation.err.col} 列)`
+              : 'XML 语法结构校验未通过'
+          throw new Error(`XML 校验失败: ${errDetail}`)
+        }
         const parser = new XMLParser({ ignoreAttributes: false })
         const parsed = parser.parse(input)
         targetContent.value = JSON.stringify(parsed, null, 2)
@@ -83,7 +101,8 @@ function executeConversion() {
         targetContent.value = JSON.stringify(parsed, null, 2)
       }
     }
-  } catch {
+  } catch (err) {
+    conversionError.value = (err as Error).message || '格式转换错误'
     targetContent.value = ''
   }
 }
@@ -187,6 +206,15 @@ onBeforeUnmount(() => {
           />
         </div>
       </div>
+    </div>
+
+    <!-- 错误反馈提示条 -->
+    <div
+      v-if="conversionError"
+      class="flex shrink-0 items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
+    >
+      <AlertCircle class="h-4 w-4 shrink-0 text-rose-500" />
+      <span class="truncate font-medium">{{ conversionError }}</span>
     </div>
 
     <!-- 双栏工作台：撑满高度，支持拖拽重分配宽度 (默认 50%:50%) -->

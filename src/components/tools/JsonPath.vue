@@ -1,44 +1,63 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import CodeEditor from '../editor/CodeEditor.vue'
 import { JSONPath } from 'jsonpath-plus'
-import { Filter } from '@lucide/vue'
+import { Filter, AlertCircle, CheckCircle2 } from '@lucide/vue'
 import { UiInput, UiSplitPane } from '../ui'
+import { getToolDraft, setToolDraft } from '../../utils/toolDrafts'
 
-const jsonInput = ref('')
-const pathExpression = ref('')
+const jsonInput = ref(getToolDraft('json-path:input', ''))
+const pathExpression = ref(getToolDraft('json-path:expr', ''))
 
-interface PathResult {
+watch(jsonInput, (val) => setToolDraft('json-path:input', val))
+watch(pathExpression, (val) => setToolDraft('json-path:expr', val))
+
+interface EvaluationState {
   matches: unknown[]
   paths: string[]
+  error: { type: 'json' | 'expr'; message: string } | null
 }
 
-const evaluated = computed<PathResult>(() => {
+const evaluated = computed<EvaluationState>(() => {
   const rawJson = jsonInput.value.trim()
   const expr = pathExpression.value.trim()
 
   if (!rawJson || !expr) {
-    return { matches: [], paths: [] }
+    return { matches: [], paths: [], error: null }
+  }
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(rawJson)
+  } catch (err) {
+    return {
+      matches: [],
+      paths: [],
+      error: { type: 'json', message: (err as Error).message }
+    }
   }
 
   try {
-    const parsed = JSON.parse(rawJson)
-    const matches = JSONPath({ path: expr, json: parsed, resultType: 'value' })
-    const paths = JSONPath({ path: expr, json: parsed, resultType: 'path' })
-
+    const all = JSONPath({ path: expr, json: parsed as object, resultType: 'all' })
+    const items = Array.isArray(all) ? all : all ? [all] : []
     return {
-      matches: Array.isArray(matches) ? matches : [matches],
-      paths: Array.isArray(paths) ? paths : [paths]
+      matches: items.map((x: any) => x?.value),
+      paths: items.map((x: any) => x?.path),
+      error: null
     }
-  } catch {
+  } catch (err) {
     return {
       matches: [],
-      paths: []
+      paths: [],
+      error: { type: 'expr', message: (err as Error).message }
     }
   }
 })
 
 const outputFormatted = computed(() => {
+  if (evaluated.value.error) {
+    return `// 提取失败: ${evaluated.value.error.type === 'json' ? 'JSON 语法错误' : 'JSONPath 表达式错误'}\n// ${evaluated.value.error.message}`
+  }
   if (!evaluated.value.matches.length) return ''
   return JSON.stringify(
     evaluated.value.matches.length === 1 ? evaluated.value.matches[0] : evaluated.value.matches,
@@ -67,13 +86,26 @@ const outputFormatted = computed(() => {
       </div>
 
       <div v-if="pathExpression && jsonInput" class="flex shrink-0 items-center gap-2">
-        <span class="text-xs whitespace-nowrap text-zinc-400">
-          找到
-          <strong class="text-emerald-600 dark:text-emerald-400">{{
-            evaluated.matches.length
-          }}</strong>
-          项
-        </span>
+        <template v-if="evaluated.error">
+          <span class="flex items-center gap-1.5 text-xs text-rose-500">
+            <AlertCircle class="h-3.5 w-3.5 shrink-0" />
+            <span class="max-w-[200px] truncate" :title="evaluated.error.message">
+              {{ evaluated.error.type === 'json' ? 'JSON 解析错误' : '表达式错误' }}
+            </span>
+          </span>
+        </template>
+        <template v-else-if="evaluated.matches.length === 0">
+          <span class="text-xs text-amber-500"> 未匹配到任何项 </span>
+        </template>
+        <template v-else>
+          <span class="text-xs whitespace-nowrap text-zinc-400">
+            找到
+            <strong class="text-emerald-600 dark:text-emerald-400">{{
+              evaluated.matches.length
+            }}</strong>
+            项
+          </span>
+        </template>
       </div>
     </div>
 

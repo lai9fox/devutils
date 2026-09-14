@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { tools, toolCategories, type ToolMeta } from '../../data/tools'
+import { tools, toolCategories, searchTools, type ToolMeta } from '../../data/tools'
 import JsonFormatter from '../tools/JsonFormatter.vue'
 import JsonViewer from '../tools/JsonViewer.vue'
 import JsonValidator from '../tools/JsonValidator.vue'
@@ -76,11 +76,7 @@ const currentTool = computed(() => {
 })
 
 const filteredTools = computed(() => {
-  const q = searchFilter.value.trim().toLowerCase()
-  if (!q) return tools
-  return tools.filter(
-    (t) => t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
-  )
+  return searchTools(searchFilter.value)
 })
 
 const categoriesWithTools = computed(() => {
@@ -116,6 +112,9 @@ function handlePopState() {
   const matched = tools.find((t) => t.id === path || t.path.replace(/^\/|\/$/g, '') === path)
   if (matched && matched.id !== currentToolId.value) {
     currentToolId.value = matched.id
+    if (typeof document !== 'undefined') {
+      document.title = `${matched.name} - DevUtils`
+    }
   }
 }
 
@@ -170,29 +169,20 @@ onUnmounted(() => {
   window.removeEventListener('popstate', handlePopState)
 })
 
+const toolComponents: Record<string, any> = {
+  'json-formatter': JsonFormatter,
+  'json-viewer': JsonViewer,
+  'json-validator': JsonValidator,
+  'json-path': JsonPath,
+  'json-converter': JsonConverter,
+  'json-to-types': JsonToTypes,
+  'base64-text': Base64Codec,
+  'base64-image': Base64Image,
+  'base64-file': Base64File
+}
+
 function getToolComponent(id: string) {
-  switch (id) {
-    case 'json-formatter':
-      return JsonFormatter
-    case 'json-viewer':
-      return JsonViewer
-    case 'json-validator':
-      return JsonValidator
-    case 'json-path':
-      return JsonPath
-    case 'json-converter':
-      return JsonConverter
-    case 'json-to-types':
-      return JsonToTypes
-    case 'base64-text':
-      return Base64Codec
-    case 'base64-image':
-      return Base64Image
-    case 'base64-file':
-      return Base64File
-    default:
-      return JsonFormatter
-  }
+  return toolComponents[id] || JsonFormatter
 }
 
 function getIconComponent(icon: string) {
@@ -245,6 +235,9 @@ function selectTool(tool: ToolMeta) {
   currentToolId.value = tool.id
   // 更新浏览器 URL，保持前进后退历史
   window.history.pushState({}, '', tool.path)
+  if (typeof document !== 'undefined') {
+    document.title = `${tool.name} - DevUtils`
+  }
   workspaceScrollRef.value?.scrollTo({ top: 0 })
   showBackToTop.value = false
   if (!isDesktop.value) {
@@ -252,7 +245,14 @@ function selectTool(tool: ToolMeta) {
   }
 }
 
-function handleToolClick(tool: ToolMeta) {
+function handleToolClick(tool: ToolMeta, e?: MouseEvent) {
+  if (e) {
+    // 允许用户使用修饰键（Cmd/Ctrl/Shift）或鼠标中键在新标签页中打开
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) {
+      return
+    }
+    e.preventDefault()
+  }
   selectTool(tool)
   handleToolLeave()
 }
@@ -361,11 +361,12 @@ function handleToolClick(tool: ToolMeta) {
             </div>
           </div>
 
-          <!-- 工具按钮项 -->
+          <!-- 工具超链接导航项 (符合搜索引擎爬虫友好抓取的标准语义 a 标签) -->
           <div class="space-y-0.5">
-            <button
+            <a
               v-for="tool in cat.tools"
               :key="tool.id"
+              :href="tool.path"
               class="group relative flex h-9 w-full cursor-pointer items-center rounded-lg border px-2.5 text-left font-medium whitespace-nowrap transition-all duration-150 select-none active:scale-[0.98]"
               :class="
                 tool.id === currentToolId
@@ -375,7 +376,7 @@ function handleToolClick(tool: ToolMeta) {
               :title="isExpanded ? tool.name : undefined"
               @mouseenter="(e) => isDesktop && !desktopExpanded && handleToolHover(tool, e)"
               @mouseleave="handleToolLeave"
-              @click="handleToolClick(tool)"
+              @click="handleToolClick(tool, $event)"
             >
               <!-- 图标：固定 16x16，轴心对齐，无位移 -->
               <component
@@ -401,7 +402,7 @@ function handleToolClick(tool: ToolMeta) {
                   tool.name
                 }}</span>
               </div>
-            </button>
+            </a>
           </div>
         </div>
       </div>

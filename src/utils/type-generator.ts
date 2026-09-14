@@ -4,14 +4,12 @@
  */
 
 function toPascalCase(str: string): string {
-  return (
-    str
-      .replace(/[^a-zA-Z0-9]/g, ' ')
-      .split(' ')
-      .filter(Boolean)
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join('') || 'Item'
-  )
+  const words = str
+    .replace(/[^a-zA-Z0-9]/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+  if (words.length === 0) return 'Item'
+  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('')
 }
 
 function toCamelCase(str: string): string {
@@ -27,64 +25,385 @@ function toSnakeCase(str: string): string {
     .replace(/[^a-zA-Z0-9_]/g, '_')
 }
 
+const JAVA_KEYWORDS = new Set([
+  'abstract',
+  'assert',
+  'boolean',
+  'break',
+  'byte',
+  'case',
+  'catch',
+  'char',
+  'class',
+  'const',
+  'continue',
+  'default',
+  'do',
+  'double',
+  'else',
+  'enum',
+  'extends',
+  'final',
+  'finally',
+  'float',
+  'for',
+  'goto',
+  'if',
+  'implements',
+  'import',
+  'instanceof',
+  'int',
+  'interface',
+  'long',
+  'native',
+  'new',
+  'package',
+  'private',
+  'protected',
+  'public',
+  'return',
+  'short',
+  'static',
+  'strictfp',
+  'super',
+  'switch',
+  'synchronized',
+  'this',
+  'throw',
+  'throws',
+  'transient',
+  'try',
+  'void',
+  'volatile',
+  'while',
+  'record'
+])
+
+function toJavaFieldName(key: string): string {
+  let name = toCamelCase(key)
+  if (name === 'class') return 'clazz'
+  if (/^[0-9]/.test(name)) {
+    name = '_' + name
+  } else if (JAVA_KEYWORDS.has(name)) {
+    name = name + '_'
+  }
+  return name
+}
+
+function toJavaMethodName(fieldName: string, prefix: 'get' | 'set'): string {
+  if (fieldName.startsWith('_')) {
+    return `${prefix}${fieldName}`
+  }
+  const pascal = fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
+  return `${prefix}${pascal}`
+}
+
+const GO_KEYWORDS = new Set([
+  'break',
+  'default',
+  'func',
+  'interface',
+  'select',
+  'case',
+  'defer',
+  'go',
+  'map',
+  'struct',
+  'chan',
+  'else',
+  'goto',
+  'package',
+  'switch',
+  'const',
+  'fallthrough',
+  'if',
+  'range',
+  'type',
+  'continue',
+  'for',
+  'import',
+  'return',
+  'var'
+])
+
+function toGoFieldName(key: string): string {
+  let name = toPascalCase(key)
+  if (/^[0-9]/.test(name)) {
+    name = 'Field' + name
+  } else if (GO_KEYWORDS.has(name.toLowerCase())) {
+    name = name + 'Field'
+  }
+  return name
+}
+
+const PYTHON_KEYWORDS = new Set([
+  'and',
+  'as',
+  'assert',
+  'async',
+  'await',
+  'break',
+  'class',
+  'continue',
+  'def',
+  'del',
+  'elif',
+  'else',
+  'except',
+  'False',
+  'finally',
+  'for',
+  'from',
+  'global',
+  'if',
+  'import',
+  'in',
+  'is',
+  'lambda',
+  'None',
+  'nonlocal',
+  'not',
+  'or',
+  'pass',
+  'raise',
+  'return',
+  'True',
+  'try',
+  'while',
+  'with',
+  'yield'
+])
+
+function toPythonFieldName(key: string): string {
+  let name = toSnakeCase(key)
+  if (/^[0-9]/.test(name)) {
+    name = 'field_' + name
+  } else if (PYTHON_KEYWORDS.has(name)) {
+    name = name + '_'
+  }
+  return name
+}
+
+const RUST_KEYWORDS = new Set([
+  'as',
+  'break',
+  'const',
+  'continue',
+  'crate',
+  'else',
+  'enum',
+  'extern',
+  'false',
+  'fn',
+  'for',
+  'if',
+  'impl',
+  'in',
+  'let',
+  'loop',
+  'match',
+  'mod',
+  'move',
+  'mut',
+  'pub',
+  'ref',
+  'return',
+  'self',
+  'Self',
+  'static',
+  'struct',
+  'super',
+  'trait',
+  'true',
+  'type',
+  'unsafe',
+  'use',
+  'where',
+  'while',
+  'async',
+  'await',
+  'dyn'
+])
+
+function toRustFieldName(key: string): string {
+  let name = toSnakeCase(key)
+  if (/^[0-9]/.test(name)) {
+    return 'field_' + name
+  }
+  if (RUST_KEYWORDS.has(name)) {
+    return 'r#' + name
+  }
+  return name
+}
+
+/**
+ * 辅助：合并数组内多个对象的属性
+ */
+function mergeArrayObjectProperties(arr: Record<string, unknown>[]): {
+  keys: string[]
+  keyMap: Map<string, { values: unknown[]; isOptional: boolean }>
+} {
+  const keyMap = new Map<string, { values: unknown[]; isOptional: boolean }>()
+  for (const obj of arr) {
+    if (obj !== null && typeof obj === 'object') {
+      for (const k of Object.keys(obj)) {
+        if (!keyMap.has(k)) {
+          keyMap.set(k, { values: [], isOptional: false })
+        }
+      }
+    }
+  }
+
+  const allKeys = Array.from(keyMap.keys())
+  for (const k of allKeys) {
+    const entry = keyMap.get(k)!
+    for (const obj of arr) {
+      if (obj !== null && typeof obj === 'object') {
+        if (Object.prototype.hasOwnProperty.call(obj, k)) {
+          entry.values.push(obj[k])
+        } else {
+          entry.isOptional = true
+        }
+      }
+    }
+  }
+
+  return { keys: allKeys, keyMap }
+}
+
 // 1. TypeScript Generator
 export function jsonToTypeScript(json: unknown, rootName = 'RootObject'): string {
-  const interfaces: string[] = []
+  const interfaces: Map<string, string> = new Map()
+  const usedNames = new Set<string>()
+
+  function allocateName(base: string): string {
+    let name = toPascalCase(base)
+    if (!usedNames.has(name)) {
+      usedNames.add(name)
+      return name
+    }
+    let counter = 2
+    while (usedNames.has(`${name}${counter}`)) {
+      counter++
+    }
+    const unique = `${name}${counter}`
+    usedNames.add(unique)
+    return unique
+  }
 
   function generateInterface(obj: Record<string, unknown>, name: string): string {
     const lines: string[] = []
     lines.push(`export interface ${name} {`)
 
     for (const [key, value] of Object.entries(obj)) {
-      const typeStr = getType(value, toPascalCase(key))
+      const typeStr = getType(value, name + toPascalCase(key), toPascalCase(key))
       const safeKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key) ? key : JSON.stringify(key)
       lines.push(`  ${safeKey}: ${typeStr};`)
     }
 
     lines.push('}')
-    return lines.join('\n')
+    const res = lines.join('\n')
+    interfaces.set(name, res)
+    return name
   }
 
-  function getType(val: unknown, keyContext: string): string {
+  function generateMergedInterface(arr: Record<string, unknown>[], name: string): string {
+    const { keys, keyMap } = mergeArrayObjectProperties(arr)
+    const lines: string[] = []
+    lines.push(`export interface ${name} {`)
+
+    for (const key of keys) {
+      const { values, isOptional } = keyMap.get(key)!
+      const typeSet = new Set<string>()
+      for (const val of values) {
+        typeSet.add(getType(val, name + toPascalCase(key), toPascalCase(key)))
+      }
+      const typeStr = Array.from(typeSet).join(' | ') || 'any'
+      const safeKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key) ? key : JSON.stringify(key)
+      lines.push(`  ${safeKey}${isOptional ? '?' : ''}: ${typeStr};`)
+    }
+
+    lines.push('}')
+    const res = lines.join('\n')
+    interfaces.set(name, res)
+    return name
+  }
+
+  function getType(val: unknown, qualifiedContext: string, fallbackName: string): string {
     if (val === null) return 'any'
     if (typeof val === 'string') return 'string'
     if (typeof val === 'number') return 'number'
     if (typeof val === 'boolean') return 'boolean'
     if (Array.isArray(val)) {
       if (val.length === 0) return 'any[]'
-      const innerType = getType(val[0], keyContext + 'Item')
-      return `${innerType}[]`
+      const objects = val.filter(
+        (item): item is Record<string, unknown> =>
+          item !== null && typeof item === 'object' && !Array.isArray(item)
+      )
+      if (objects.length > 0) {
+        const typeName = allocateName(fallbackName + 'Item')
+        generateMergedInterface(objects, typeName)
+        return `${typeName}[]`
+      }
+      const itemTypes = new Set<string>()
+      for (const item of val) {
+        itemTypes.add(getType(item, qualifiedContext + 'Item', fallbackName + 'Item'))
+      }
+      const union = Array.from(itemTypes).join(' | ')
+      return itemTypes.size > 1 ? `(${union})[]` : `${union}[]`
     }
     if (typeof val === 'object') {
-      const subName = keyContext
-      interfaces.push(generateInterface(val as Record<string, unknown>, subName))
-      return subName
+      const typeName = allocateName(fallbackName)
+      generateInterface(val as Record<string, unknown>, typeName)
+      return typeName
     }
     return 'any'
   }
 
   if (Array.isArray(json)) {
-    if (json.length > 0 && typeof json[0] === 'object' && json[0] !== null) {
-      interfaces.push(generateInterface(json[0] as Record<string, unknown>, rootName + 'Item'))
-      return `${interfaces.reverse().join('\n\n')}\n\nexport type ${rootName} = ${rootName}Item[];`
+    const objects = json.filter(
+      (item): item is Record<string, unknown> =>
+        item !== null && typeof item === 'object' && !Array.isArray(item)
+    )
+    if (objects.length > 0) {
+      const typeName = allocateName(rootName + 'Item')
+      generateMergedInterface(objects, typeName)
+      return `${Array.from(interfaces.values()).join('\n\n')}\n\nexport type ${rootName} = ${typeName}[];`
     }
     return `export type ${rootName} = any[];`
   }
 
   if (typeof json === 'object' && json !== null) {
-    interfaces.push(generateInterface(json as Record<string, unknown>, rootName))
-    return interfaces.reverse().join('\n\n')
+    usedNames.add(rootName)
+    generateInterface(json as Record<string, unknown>, rootName)
+    return Array.from(interfaces.values()).join('\n\n')
   }
 
   return `export type ${rootName} = ${typeof json};`
 }
 
-// 2. Java Generator (支持 POJO / Record / Lombok)
+// 2. Java Generator
 export type JavaStyle = 'pojo' | 'record' | 'lombok'
 
 export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 'pojo'): string {
   const classes: string[] = []
+  const usedNames = new Set<string>()
   let hasList = false
+
+  function allocateName(base: string): string {
+    let name = toPascalCase(base)
+    if (!usedNames.has(name)) {
+      usedNames.add(name)
+      return name
+    }
+    let counter = 2
+    while (usedNames.has(`${name}${counter}`)) {
+      counter++
+    }
+    const unique = `${name}${counter}`
+    usedNames.add(unique)
+    return unique
+  }
 
   function getJavaType(val: unknown, keyContext: string): string {
     if (val === null) return 'Object'
@@ -99,14 +418,34 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
     if (Array.isArray(val)) {
       hasList = true
       if (val.length === 0) return 'List<Object>'
+      const objects = val.filter(
+        (item): item is Record<string, unknown> =>
+          item !== null && typeof item === 'object' && !Array.isArray(item)
+      )
+      if (objects.length > 0) {
+        const className = allocateName(keyContext + 'Item')
+        generateClassFromObjects(objects, className)
+        return `List<${className}>`
+      }
       const innerType = getJavaType(val[0], keyContext + 'Item')
       return `List<${innerType}>`
     }
     if (typeof val === 'object') {
-      generateClass(val as Record<string, unknown>, keyContext)
-      return keyContext
+      const className = allocateName(keyContext)
+      generateClass(val as Record<string, unknown>, className)
+      return className
     }
     return 'Object'
+  }
+
+  function generateClassFromObjects(arr: Record<string, unknown>[], name: string) {
+    const { keys, keyMap } = mergeArrayObjectProperties(arr)
+    const merged: Record<string, unknown> = {}
+    for (const k of keys) {
+      const values = keyMap.get(k)!.values
+      merged[k] = values.length > 0 ? values[0] : null
+    }
+    generateClass(merged, name)
   }
 
   function generateClass(obj: Record<string, unknown>, name: string) {
@@ -115,7 +454,7 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
     if (style === 'record') {
       const fieldList: string[] = []
       for (const [key, val] of entries) {
-        const fieldName = toCamelCase(key)
+        const fieldName = toJavaFieldName(key)
         const fieldType = getJavaType(val, toPascalCase(key))
         const jsonAnnotation = `@JsonProperty("${key}") `
         fieldList.push(`    ${jsonAnnotation}${fieldType} ${fieldName}`)
@@ -133,13 +472,13 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
         `public class ${name} {`
       ]
       for (const [key, val] of entries) {
-        const fieldName = toCamelCase(key)
+        const fieldName = toJavaFieldName(key)
         const fieldType = getJavaType(val, toPascalCase(key))
         lines.push(`    @JsonProperty("${key}")`)
         lines.push(`    private ${fieldType} ${fieldName};`)
         lines.push('')
       }
-      if (entries.length > 0) lines.pop() // 移除最后一个空行
+      if (entries.length > 0) lines.pop()
       lines.push('}')
       classes.push(lines.join('\n'))
       return
@@ -150,7 +489,7 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
     const fields: { key: string; name: string; type: string }[] = []
 
     for (const [key, val] of entries) {
-      const fieldName = toCamelCase(key)
+      const fieldName = toJavaFieldName(key)
       const fieldType = getJavaType(val, toPascalCase(key))
       fields.push({ key, name: fieldName, type: fieldType })
       lines.push(`    @JsonProperty("${key}")`)
@@ -158,23 +497,22 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
     }
 
     lines.push('')
-    // 无参构造函数
     lines.push(`    public ${name}() {}`)
     lines.push('')
 
-    // Getters and Setters
     for (const f of fields) {
-      const pascal = f.name.charAt(0).toUpperCase() + f.name.slice(1)
-      lines.push(`    public ${f.type} get${pascal}() {`)
+      const getter = toJavaMethodName(f.name, 'get')
+      const setter = toJavaMethodName(f.name, 'set')
+      lines.push(`    public ${f.type} ${getter}() {`)
       lines.push(`        return this.${f.name};`)
       lines.push(`    }`)
       lines.push('')
-      lines.push(`    public void set${pascal}(${f.type} ${f.name}) {`)
+      lines.push(`    public void ${setter}(${f.type} ${f.name}) {`)
       lines.push(`        this.${f.name} = ${f.name};`)
       lines.push(`    }`)
       lines.push('')
     }
-    lines.pop() // 移除多余空行
+    lines.pop()
     lines.push('}')
     classes.push(lines.join('\n'))
   }
@@ -188,18 +526,24 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
   }
 
   if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
+    usedNames.add(rootName)
     generateClass(json as Record<string, unknown>, rootName)
     if (hasList) {
       importList.unshift('import java.util.List;')
     }
-    return `${importList.join('\n')}\n\n${classes.reverse().join('\n\n')}`
+    return `${importList.join('\n')}\n\n${classes.join('\n\n')}`
   }
 
   if (Array.isArray(json)) {
-    if (json.length > 0 && typeof json[0] === 'object' && json[0] !== null) {
-      generateClass(json[0] as Record<string, unknown>, rootName + 'Item')
+    const objects = json.filter(
+      (item): item is Record<string, unknown> =>
+        item !== null && typeof item === 'object' && !Array.isArray(item)
+    )
+    if (objects.length > 0) {
+      const className = allocateName(rootName + 'Item')
+      generateClassFromObjects(objects, className)
       importList.unshift('import java.util.List;')
-      return `${importList.join('\n')}\n\n${classes.reverse().join('\n\n')}\n\n// 根节点为列表: List<${rootName}Item>`
+      return `${importList.join('\n')}\n\n${classes.join('\n\n')}\n\n// 根节点为列表: List<${className}>`
     }
     return `import java.util.List;\n\n// 根节点为列表: List<Object>`
   }
@@ -210,19 +554,47 @@ export function jsonToJava(json: unknown, rootName = 'Root', style: JavaStyle = 
 // 3. Go Struct Generator
 export function jsonToGo(json: unknown, rootName = 'AutoGenerated'): string {
   const structs: string[] = []
+  const usedNames = new Set<string>()
+
+  function allocateName(base: string): string {
+    let name = toPascalCase(base)
+    if (!usedNames.has(name)) {
+      usedNames.add(name)
+      return name
+    }
+    let counter = 2
+    while (usedNames.has(`${name}${counter}`)) {
+      counter++
+    }
+    const unique = `${name}${counter}`
+    usedNames.add(unique)
+    return unique
+  }
 
   function generateStruct(obj: Record<string, unknown>, name: string): string {
     const lines: string[] = []
     lines.push(`type ${name} struct {`)
 
     for (const [key, value] of Object.entries(obj)) {
-      const fieldName = toPascalCase(key)
-      const fieldType = getGoType(value, fieldName)
+      const fieldName = toGoFieldName(key)
+      const fieldType = getGoType(value, toPascalCase(key))
       lines.push(`\t${fieldName} ${fieldType} \`json:"${key}"\``)
     }
 
     lines.push('}')
-    return lines.join('\n')
+    const res = lines.join('\n')
+    structs.push(res)
+    return name
+  }
+
+  function generateStructFromObjects(arr: Record<string, unknown>[], name: string): string {
+    const { keys, keyMap } = mergeArrayObjectProperties(arr)
+    const merged: Record<string, unknown> = {}
+    for (const k of keys) {
+      const values = keyMap.get(k)!.values
+      merged[k] = values.length > 0 ? values[0] : null
+    }
+    return generateStruct(merged, name)
   }
 
   function getGoType(val: unknown, keyContext: string): string {
@@ -234,19 +606,30 @@ export function jsonToGo(json: unknown, rootName = 'AutoGenerated'): string {
     if (typeof val === 'boolean') return 'bool'
     if (Array.isArray(val)) {
       if (val.length === 0) return '[]interface{}'
+      const objects = val.filter(
+        (item): item is Record<string, unknown> =>
+          item !== null && typeof item === 'object' && !Array.isArray(item)
+      )
+      if (objects.length > 0) {
+        const structName = allocateName(keyContext + 'Item')
+        generateStructFromObjects(objects, structName)
+        return `[]${structName}`
+      }
       const innerType = getGoType(val[0], keyContext + 'Item')
       return `[]${innerType}`
     }
     if (typeof val === 'object') {
-      structs.push(generateStruct(val as Record<string, unknown>, keyContext))
-      return keyContext
+      const structName = allocateName(keyContext)
+      generateStruct(val as Record<string, unknown>, structName)
+      return structName
     }
     return 'interface{}'
   }
 
   if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
-    structs.push(generateStruct(json as Record<string, unknown>, rootName))
-    return structs.reverse().join('\n\n')
+    usedNames.add(rootName)
+    generateStruct(json as Record<string, unknown>, rootName)
+    return structs.join('\n\n')
   }
 
   return `// 根节点需为 JSON 对象\ntype ${rootName} struct {}`
@@ -255,6 +638,22 @@ export function jsonToGo(json: unknown, rootName = 'AutoGenerated'): string {
 // 4. Rust Struct Generator
 export function jsonToRust(json: unknown, rootName = 'Root'): string {
   const structs: string[] = []
+  const usedNames = new Set<string>()
+
+  function allocateName(base: string): string {
+    let name = toPascalCase(base)
+    if (!usedNames.has(name)) {
+      usedNames.add(name)
+      return name
+    }
+    let counter = 2
+    while (usedNames.has(`${name}${counter}`)) {
+      counter++
+    }
+    const unique = `${name}${counter}`
+    usedNames.add(unique)
+    return unique
+  }
 
   function generateStruct(obj: Record<string, unknown>, name: string): string {
     const lines: string[] = []
@@ -263,7 +662,7 @@ export function jsonToRust(json: unknown, rootName = 'Root'): string {
     lines.push(`pub struct ${name} {`)
 
     for (const [key, value] of Object.entries(obj)) {
-      const fieldName = toSnakeCase(key)
+      const fieldName = toRustFieldName(key)
       const fieldType = getRustType(value, toPascalCase(key))
       if (fieldName !== key) {
         lines.push(`    #[serde(rename = "${key}")]`)
@@ -272,7 +671,9 @@ export function jsonToRust(json: unknown, rootName = 'Root'): string {
     }
 
     lines.push('}')
-    return lines.join('\n')
+    const res = lines.join('\n')
+    structs.push(res)
+    return name
   }
 
   function getRustType(val: unknown, keyContext: string): string {
@@ -284,19 +685,30 @@ export function jsonToRust(json: unknown, rootName = 'Root'): string {
     if (typeof val === 'boolean') return 'bool'
     if (Array.isArray(val)) {
       if (val.length === 0) return 'Vec<serde_json::Value>'
+      const objects = val.filter(
+        (item): item is Record<string, unknown> =>
+          item !== null && typeof item === 'object' && !Array.isArray(item)
+      )
+      if (objects.length > 0) {
+        const structName = allocateName(keyContext + 'Item')
+        generateStruct(objects[0], structName)
+        return `Vec<${structName}>`
+      }
       const inner = getRustType(val[0], keyContext + 'Item')
       return `Vec<${inner}>`
     }
     if (typeof val === 'object') {
-      structs.push(generateStruct(val as Record<string, unknown>, keyContext))
-      return keyContext
+      const structName = allocateName(keyContext)
+      generateStruct(val as Record<string, unknown>, structName)
+      return structName
     }
     return 'serde_json::Value'
   }
 
   if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
-    structs.push(generateStruct(json as Record<string, unknown>, rootName))
-    return `use serde::{Serialize, Deserialize};\n\n${structs.reverse().join('\n\n')}`
+    usedNames.add(rootName)
+    generateStruct(json as Record<string, unknown>, rootName)
+    return `use serde::{Serialize, Deserialize};\n\n${structs.join('\n\n')}`
   }
 
   return `// 根节点需为 JSON 对象\npub struct ${rootName} {}`
@@ -305,6 +717,22 @@ export function jsonToRust(json: unknown, rootName = 'Root'): string {
 // 5. Python Pydantic Generator
 export function jsonToPython(json: unknown, rootName = 'RootModel'): string {
   const models: string[] = []
+  const usedNames = new Set<string>()
+
+  function allocateName(base: string): string {
+    let name = toPascalCase(base)
+    if (!usedNames.has(name)) {
+      usedNames.add(name)
+      return name
+    }
+    let counter = 2
+    while (usedNames.has(`${name}${counter}`)) {
+      counter++
+    }
+    const unique = `${name}${counter}`
+    usedNames.add(unique)
+    return unique
+  }
 
   function generateModel(obj: Record<string, unknown>, name: string): string {
     const lines: string[] = []
@@ -313,24 +741,49 @@ export function jsonToPython(json: unknown, rootName = 'RootModel'): string {
     const entries = Object.entries(obj)
     if (entries.length === 0) {
       lines.push('    pass')
-      return lines.join('\n')
+      const res = lines.join('\n')
+      models.push(res)
+      return name
     }
 
     for (const [key, value] of entries) {
-      const fieldName = toSnakeCase(key)
+      const fieldName = toPythonFieldName(key)
       const fieldType = getPythonType(value, toPascalCase(key))
-      if (fieldName !== key) {
-        lines.push(`    ${fieldName}: ${fieldType} = Field(alias="${key}")`)
+      const isAlias = fieldName !== key
+      const isNull = value === null
+
+      if (isAlias) {
+        if (isNull) {
+          lines.push(`    ${fieldName}: ${fieldType} = Field(default=None, alias="${key}")`)
+        } else {
+          lines.push(`    ${fieldName}: ${fieldType} = Field(alias="${key}")`)
+        }
       } else {
-        lines.push(`    ${fieldName}: ${fieldType}`)
+        if (isNull) {
+          lines.push(`    ${fieldName}: ${fieldType} = None`)
+        } else {
+          lines.push(`    ${fieldName}: ${fieldType}`)
+        }
       }
     }
 
-    return lines.join('\n')
+    const res = lines.join('\n')
+    models.push(res)
+    return name
+  }
+
+  function generateModelFromObjects(arr: Record<string, unknown>[], name: string): string {
+    const { keys, keyMap } = mergeArrayObjectProperties(arr)
+    const merged: Record<string, unknown> = {}
+    for (const k of keys) {
+      const values = keyMap.get(k)!.values
+      merged[k] = values.length > 0 ? values[0] : null
+    }
+    return generateModel(merged, name)
   }
 
   function getPythonType(val: unknown, keyContext: string): string {
-    if (val === null) return 'Optional[Any] = None'
+    if (val === null) return 'Optional[Any]'
     if (typeof val === 'string') return 'str'
     if (typeof val === 'number') {
       return Number.isInteger(val) ? 'int' : 'float'
@@ -338,19 +791,31 @@ export function jsonToPython(json: unknown, rootName = 'RootModel'): string {
     if (typeof val === 'boolean') return 'bool'
     if (Array.isArray(val)) {
       if (val.length === 0) return 'List[Any]'
+      const objects = val.filter(
+        (item): item is Record<string, unknown> =>
+          item !== null && typeof item === 'object' && !Array.isArray(item)
+      )
+      if (objects.length > 0) {
+        const modelName = allocateName(keyContext + 'Item')
+        generateModelFromObjects(objects, modelName)
+        return `List[${modelName}]`
+      }
+      // 非空基础数组
       const inner = getPythonType(val[0], keyContext + 'Item')
       return `List[${inner}]`
     }
     if (typeof val === 'object') {
-      models.push(generateModel(val as Record<string, unknown>, keyContext))
-      return keyContext
+      const modelName = allocateName(keyContext)
+      generateModel(val as Record<string, unknown>, modelName)
+      return modelName
     }
     return 'Any'
   }
 
   if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
-    models.push(generateModel(json as Record<string, unknown>, rootName))
-    return `from typing import List, Optional, Any\nfrom pydantic import BaseModel, Field\n\n${models.reverse().join('\n\n')}`
+    usedNames.add(rootName)
+    generateModel(json as Record<string, unknown>, rootName)
+    return `from __future__ import annotations\nfrom typing import List, Optional, Any\nfrom pydantic import BaseModel, Field\n\n${models.join('\n\n')}`
   }
 
   return `# 根节点需为 JSON 对象\nclass ${rootName}(BaseModel):\n    pass`

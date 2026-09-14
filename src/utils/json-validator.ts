@@ -76,144 +76,130 @@ function getLineAndColFromPos(text: string, pos: number): { line: number; col: n
   return { line, col }
 }
 
-/**
- * 从原生错误消息中解析错误位置
- */
-function extractPositionFromError(
-  errMsg: string,
-  text: string
-): { line: number; col: number; pos: number } {
-  // 1. Chrome / V8: "at position 42"
-  const posMatch = errMsg.match(/at position (\d+)/i)
-  if (posMatch) {
-    const pos = parseInt(posMatch[1], 10)
-    const { line, col } = getLineAndColFromPos(text, pos)
-    return { line, col, pos }
-  }
+import { parse as parseJsonc, printParseErrorCode, type ParseErrorCode } from 'jsonc-parser'
 
-  // 2. Firefox: "at line 3 column 5 of the JSON data"
-  const lineColMatch = errMsg.match(/at line (\d+) column (\d+)/i)
-  if (lineColMatch) {
-    const line = parseInt(lineColMatch[1], 10)
-    const col = parseInt(lineColMatch[2], 10)
-    const lines = text.split('\n')
-    let pos = 0
-    for (let i = 0; i < line - 1 && i < lines.length; i++) {
-      pos += lines[i].length + 1
-    }
-    pos += Math.min(col - 1, (lines[line - 1] || '').length)
-    return { line, col, pos }
-  }
+const ParseErrors = {
+  InvalidSymbol: 1,
+  InvalidNumberFormat: 2,
+  PropertyNameExpected: 3,
+  ValueExpected: 4,
+  ColonExpected: 5,
+  CommaExpected: 6,
+  CloseBraceExpected: 7,
+  CloseBracketExpected: 8,
+  EndOfFileExpected: 9,
+  InvalidCommentToken: 10,
+  UnexpectedEndOfComment: 11,
+  UnexpectedEndOfString: 12,
+  UnexpectedEndOfNumber: 13,
+  InvalidUnicode: 14,
+  InvalidEscapeCharacter: 15,
+  InvalidCharacter: 16
+} as const
 
-  // 3. Safari: "at line 2 column 5"
-  const safariMatch = errMsg.match(/line (\d+) column (\d+)/i)
-  if (safariMatch) {
-    const line = parseInt(safariMatch[1], 10)
-    const col = parseInt(safariMatch[2], 10)
-    const lines = text.split('\n')
-    let pos = 0
-    for (let i = 0; i < line - 1 && i < lines.length; i++) {
-      pos += lines[i].length + 1
-    }
-    pos += Math.min(col - 1, (lines[line - 1] || '').length)
-    return { line, col, pos }
-  }
-
-  // Fallback: 尝试粗略定位
-  return { line: 1, col: 1, pos: 0 }
-}
-
-/**
- * 诊断常见错误原因与给出中文修复建议
- */
-function diagnoseError(
+function diagnoseJsoncError(
   text: string,
-  rawMsg: string,
-  line: number,
-  _col: number,
-  pos: number
+  error: { error: ParseErrorCode; offset: number; length: number }
 ): { friendlyMessage: string; suggestion: string } {
-  const lineText = text.split('\n')[line - 1] || ''
+  // 特殊上下文补充检测：单引号检查
+  const surrounding = text.slice(
+    Math.max(0, error.offset - 5),
+    Math.min(text.length, error.offset + 10)
+  )
+  if (surrounding.includes("'")) {
+    return {
+      friendlyMessage: '使用了单引号引起解析失败',
+      suggestion: '标准 JSON 规范要求字符串与对象 Key 必须使用英文双引号 (")，请替换所有单引号。'
+    }
+  }
 
-  // 1. 检查单引号
-  if (text.includes("'")) {
-    const surrounding = text.slice(Math.max(0, pos - 15), Math.min(text.length, pos + 15))
-    if (surrounding.includes("'")) {
+  // 尾随逗号检测
+  const beforeOffset = text.slice(0, error.offset).trimEnd()
+  if (beforeOffset.endsWith(',')) {
+    const nextChar = text.slice(error.offset).trimStart()[0]
+    if (nextChar === '}' || nextChar === ']') {
       return {
-        friendlyMessage: '使用了单引号引起解析失败',
-        suggestion: '标准 JSON 规范要求字符串与对象 Key 必须使用英文双引号 (")，请替换所有单引号。'
+        friendlyMessage: '存在多余的尾随逗号 (Trailing Comma)',
+        suggestion: 'JSON 规范不允许在对象或数组最后一个元素末尾多写逗号，请删除此逗号。'
       }
     }
   }
 
-  // 2. 检查尾随逗号 (Trailing Comma)
-  const textBeforePos = text.slice(0, pos).trimEnd()
-  const charBefore = textBeforePos[textBeforePos.length - 1]
-  const charAtPos = text[pos] || ''
-  if (
-    (charBefore === ',' || textBeforePos.endsWith(',')) &&
-    (charAtPos === '}' || charAtPos === ']' || /^\s*[}\]]/.test(text.slice(pos)))
-  ) {
-    return {
-      friendlyMessage: '存在多余的尾随逗号 (Trailing Comma)',
-      suggestion: 'JSON 规范不允许在对象或数组最后一个元素末尾多写逗号，请删除此逗号。'
-    }
-  }
-
-  // 3. 检查未加引号的 Key
-  if (/[a-zA-Z_$][a-zA-Z0-9_$]*\s*:/.test(lineText)) {
-    return {
-      friendlyMessage: '对象键名缺少双引号',
-      suggestion: '标准 JSON 中的对象 Key 必须包裹在英文双引号中，例如 "key": "value"。'
-    }
-  }
-
-  // 4. 检查括号闭合情况
-  let openBraces = 0
-  let openBrackets = 0
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i]
-    if (c === '{') openBraces++
-    else if (c === '}') openBraces--
-    else if (c === '[') openBrackets++
-    else if (c === ']') openBrackets--
-  }
-
-  if (openBraces > 0) {
-    return {
-      friendlyMessage: '大括号未闭合',
-      suggestion: `JSON 末尾缺少 ${openBraces} 个闭合的花括号 "}"。`
-    }
-  } else if (openBraces < 0) {
-    return {
-      friendlyMessage: '多余的闭合大括号',
-      suggestion: '发现了未匹配的闭合花括号 "}"，请核对层级结构。'
-    }
-  }
-
-  if (openBrackets > 0) {
-    return {
-      friendlyMessage: '数组方括号未闭合',
-      suggestion: `JSON 末尾缺少 ${openBrackets} 个闭合的方括号 "]"。`
-    }
-  } else if (openBrackets < 0) {
-    return {
-      friendlyMessage: '多余的闭合方括号',
-      suggestion: '发现了未匹配的闭合方括号 "]"，请核对数组结构。'
-    }
-  }
-
-  // 5. 缺少冒号或逗号
-  if (rawMsg.includes('Expected') || rawMsg.includes('Unexpected token')) {
-    return {
-      friendlyMessage: '语法符号异常或标记不匹配',
-      suggestion: '请核对该位置前后是否缺少英文冒号 (:)、逗号 (,)，或者包含非法的转义字符。'
-    }
-  }
-
-  return {
-    friendlyMessage: 'JSON 语法错误',
-    suggestion: '数据格式不符合 RFC 8259 规范，请根据指示标记排查语法。'
+  switch (error.error) {
+    case ParseErrors.ValueExpected:
+      return {
+        friendlyMessage: '缺少值 (Value Expected)',
+        suggestion: '冒号后缺少有效的 JSON 属性值（字符串、数字、对象、数组、布尔值或 null）。'
+      }
+    case ParseErrors.PropertyNameExpected:
+      return {
+        friendlyMessage: '对象属性键名缺失或缺少双引号',
+        suggestion: '标准 JSON 中的对象 Key 必须包裹在英文双引号中，例如 "key": "value"。'
+      }
+    case ParseErrors.ColonExpected:
+      return {
+        friendlyMessage: '缺少冒号 (:)',
+        suggestion: '对象的键名与属性值之间必须使用英文冒号 (:) 分隔。'
+      }
+    case ParseErrors.CommaExpected:
+      return {
+        friendlyMessage: '缺少逗号分隔符 (,)',
+        suggestion: '对象键值对之间或数组元素之间必须使用英文逗号 (,) 分隔。'
+      }
+    case ParseErrors.CloseBraceExpected:
+      return {
+        friendlyMessage: '缺少闭合花括号 (})',
+        suggestion: '请在对应层级末尾补全闭合花括号 "}"。'
+      }
+    case ParseErrors.CloseBracketExpected:
+      return {
+        friendlyMessage: '缺少闭合方括号 (])',
+        suggestion: '请在对应层级末尾补全闭合方括号 "]"。'
+      }
+    case ParseErrors.EndOfFileExpected:
+      return {
+        friendlyMessage: '根节点后存在多余字符',
+        suggestion: '标准 JSON 仅允许存在单个根节点（一个对象、数组或单值），请清理末尾多余字符。'
+      }
+    case ParseErrors.InvalidSymbol:
+      return {
+        friendlyMessage: '非法符号或未加引号的标识符',
+        suggestion: '请核对该位置是否存在未定义的符号、拼写错误或未加双引号的文本。'
+      }
+    case ParseErrors.InvalidNumberFormat:
+    case ParseErrors.UnexpectedEndOfNumber:
+      return {
+        friendlyMessage: '数字格式不符合规范',
+        suggestion: 'JSON 中的数字不允许前导零（如 012）、十六进制或不完整的小数点。'
+      }
+    case ParseErrors.UnexpectedEndOfString:
+      return {
+        friendlyMessage: '字符串未闭合',
+        suggestion: '字符串末尾缺少闭合的双引号 (")，或字符串内部包含未转义的换行符。'
+      }
+    case ParseErrors.InvalidCommentToken:
+    case ParseErrors.UnexpectedEndOfComment:
+      return {
+        friendlyMessage: 'JSON 规范不支持注释',
+        suggestion: '标准 JSON (RFC 8259) 禁止使用 // 或 /* */ 注释，请移除注释或使用修复功能。'
+      }
+    case ParseErrors.InvalidEscapeCharacter:
+    case ParseErrors.InvalidUnicode:
+      return {
+        friendlyMessage: '非法的字符转义序列',
+        suggestion:
+          'JSON 仅支持 \\", \\\\, \\/, \\b, \\f, \\n, \\r, \\t 以及 \\uXXXX 形式的 Unicode 转义。'
+      }
+    case ParseErrors.InvalidCharacter:
+      return {
+        friendlyMessage: '包含非法的不可见控制字符',
+        suggestion: '字符串内部包含未转义的控制字符（如实际换行符），需使用 \\n 等转义字符表示。'
+      }
+    default:
+      return {
+        friendlyMessage: `JSON 语法错误 (${printParseErrorCode(error.error)})`,
+        suggestion: '数据格式不符合 RFC 8259 规范，请根据错误指示位置核对排查语法。'
+      }
   }
 }
 
@@ -295,24 +281,32 @@ export function validateJson(rawInput: string): ValidationResult {
     }
   } catch (err) {
     const rawMsg = (err as Error).message
-    const { line, col, pos } = extractPositionFromError(rawMsg, rawInput)
-    const { friendlyMessage, suggestion } = diagnoseError(rawInput, rawMsg, line, col, pos)
+    const errors: { error: ParseErrorCode; offset: number; length: number }[] = []
+    parseJsonc(rawInput, errors, { allowTrailingComma: false, disallowComments: true })
+
+    let line = 1
+    let col = 1
+    let pos = 0
+    let friendlyMessage = 'JSON 语法错误'
+    let suggestion = '请检查 JSON 格式是否符合 RFC 8259 规范。'
+
+    if (errors.length > 0) {
+      const firstErr = errors[0]
+      pos = firstErr.offset
+      const loc = getLineAndColFromPos(rawInput, pos)
+      line = loc.line
+      col = loc.col
+      const diag = diagnoseJsoncError(rawInput, firstErr)
+      friendlyMessage = diag.friendlyMessage
+      suggestion = diag.suggestion
+    }
+
     const snippet = buildCodeSnippet(rawInput, line, col)
 
     // 检测能否自动修复
-    const { repaired, changed } = repairJson(rawInput)
-    let canRepair = false
-    let repairedPreview: string | undefined
-
-    if (changed) {
-      try {
-        JSON.parse(repaired)
-        canRepair = true
-        repairedPreview = repaired
-      } catch {
-        canRepair = false
-      }
-    }
+    const { repaired, changed, success } = repairJson(rawInput)
+    const canRepair = success && changed
+    const repairedPreview = canRepair ? repaired : undefined
 
     return {
       isValid: false,

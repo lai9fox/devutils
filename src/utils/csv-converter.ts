@@ -29,21 +29,41 @@ export function flattenObject(
     if (isPlainObject(value)) {
       const nested = flattenObject(value, newKey, arrayFormat)
       if (Object.keys(nested).length > 0) {
-        Object.assign(result, nested)
+        for (const [nestedKey, nestedValue] of Object.entries(nested)) {
+          if (Object.prototype.hasOwnProperty.call(result, nestedKey)) {
+            throw new Error(`CSV 扁平化出现路径冲突: "${nestedKey}" 已存在`)
+          }
+          result[nestedKey] = nestedValue
+        }
       } else {
+        if (Object.prototype.hasOwnProperty.call(result, newKey)) {
+          throw new Error(`CSV 扁平化出现路径冲突: "${newKey}" 已存在`)
+        }
         result[newKey] = ''
       }
     } else if (Array.isArray(value)) {
+      if (Object.prototype.hasOwnProperty.call(result, newKey)) {
+        throw new Error(`CSV 扁平化出现路径冲突: "${newKey}" 已存在`)
+      }
       if (arrayFormat === 'join' && value.every((x) => x === null || typeof x !== 'object')) {
         result[newKey] = value.join(', ')
       } else {
         result[newKey] = JSON.stringify(value)
       }
     } else if (value !== null && typeof value === 'object') {
+      if (Object.prototype.hasOwnProperty.call(result, newKey)) {
+        throw new Error(`CSV 扁平化出现路径冲突: "${newKey}" 已存在`)
+      }
       result[newKey] = JSON.stringify(value)
     } else if (value === undefined || value === null) {
+      if (Object.prototype.hasOwnProperty.call(result, newKey)) {
+        throw new Error(`CSV 扁平化出现路径冲突: "${newKey}" 已存在`)
+      }
       result[newKey] = ''
     } else {
+      if (Object.prototype.hasOwnProperty.call(result, newKey)) {
+        throw new Error(`CSV 扁平化出现路径冲突: "${newKey}" 已存在`)
+      }
       result[newKey] = value
     }
   }
@@ -205,13 +225,24 @@ export function parseCellValue(value: any): any {
     return value
   }
 
-  // 10 位以上纯数字（通常为手机号、账号、身份证、订单号、时间戳），保留字符串防止精度丢失
-  if (/^\d{10,}$/.test(trimmed)) {
+  // 10 位以上纯数字（正负数均受保护，如手机号、账号、身份证、订单号、时间戳、64 位 ID），保留字符串防止精度丢失
+  if (/^-?\d{10,}$/.test(trimmed)) {
     return value
   }
 
   // 常规合法数字
   if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(trimmed)) {
+    // 纯整数且超出 JS 安全范围，保留字符串
+    if (/^-?\d+$/.test(trimmed)) {
+      try {
+        const bi = BigInt(trimmed)
+        if (bi > BigInt(Number.MAX_SAFE_INTEGER) || bi < BigInt(Number.MIN_SAFE_INTEGER)) {
+          return value
+        }
+      } catch {
+        return value
+      }
+    }
     const num = Number(trimmed)
     if (!isNaN(num) && Number.isFinite(num)) {
       return num
@@ -221,23 +252,35 @@ export function parseCellValue(value: any): any {
   return value
 }
 
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
+
 /**
- * 反扁平化：将 dot notation 键名还原为嵌套对象
+ * 反扁平化：将 dot notation 键名还原为嵌套对象（阻断原型污染攻击）
  */
 export function unflattenObject(obj: Record<string, any>): Record<string, any> {
   const result: Record<string, any> = {}
   for (const [key, rawValue] of Object.entries(obj)) {
-    const value = parseCellValue(rawValue)
     const parts = key.split('.')
+    // 防御原型污染：若包含非法键段，直接跳过此项
+    if (parts.some((p) => FORBIDDEN_KEYS.has(p))) {
+      continue
+    }
+
+    const value = parseCellValue(rawValue)
     let current = result
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i]
-      if (!current[part] || typeof current[part] !== 'object') {
+      if (
+        !Object.prototype.hasOwnProperty.call(current, part) ||
+        typeof current[part] !== 'object' ||
+        current[part] === null
+      ) {
         current[part] = {}
       }
       current = current[part]
     }
-    current[parts[parts.length - 1]] = value
+    const lastPart = parts[parts.length - 1]
+    current[lastPart] = value
   }
   return result
 }
@@ -256,12 +299,6 @@ export function csvToJson(csvStr: string, options: CsvConvertOptions = {}): any 
   const rows = (parsed.data || []) as Record<string, any>[]
   if (rows.length === 0) return []
 
-  // 检查是否为由一维基础类型数组导出的单列（表头为 value）
-  const fields = parsed.meta?.fields || Object.keys(rows[0] || {})
-  if (fields.length === 1 && fields[0] === 'value') {
-    return rows.map((r) => parseCellValue(r.value))
-  }
-
   const processed = rows.map((row) => {
     if (flatten) {
       return unflattenObject(row)
@@ -274,5 +311,5 @@ export function csvToJson(csvStr: string, options: CsvConvertOptions = {}): any 
     }
   })
 
-  return processed.length === 1 ? processed[0] : processed
+  return processed
 }

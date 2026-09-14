@@ -81,6 +81,29 @@ function handleSelect(val: any) {
   emit('change', val)
 }
 
+function handleKeydown(event: KeyboardEvent, index: number) {
+  let nextIndex = -1
+  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    event.preventDefault()
+    nextIndex = (index + 1) % normalizedOptions.value.length
+  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    event.preventDefault()
+    nextIndex = (index - 1 + normalizedOptions.value.length) % normalizedOptions.value.length
+  } else if (event.key === 'Home') {
+    event.preventDefault()
+    nextIndex = 0
+  } else if (event.key === 'End') {
+    event.preventDefault()
+    nextIndex = normalizedOptions.value.length - 1
+  }
+
+  if (nextIndex >= 0) {
+    const nextItem = normalizedOptions.value[nextIndex]
+    handleSelect(nextItem.value)
+    itemRefs.value[nextIndex]?.focus()
+  }
+}
+
 watch(activeIndex, () => {
   nextTick(updateIndicator)
 })
@@ -123,7 +146,8 @@ onUnmounted(() => {
 <template>
   <div
     ref="rootRef"
-    class="relative box-border inline-flex shrink-0 items-center rounded-lg bg-zinc-100 p-1 whitespace-nowrap select-none dark:bg-zinc-800"
+    role="radiogroup"
+    class="scrollbar-none relative box-border inline-flex max-w-full shrink-0 items-center overflow-x-auto rounded-lg bg-zinc-100 p-1 whitespace-nowrap select-none dark:bg-zinc-800"
     :class="size === 'xs' ? 'h-7' : 'h-8'"
   >
     <!-- 滑动背景指示器 -->
@@ -145,6 +169,9 @@ onUnmounted(() => {
       :key="String(item.value)"
       :ref="(el) => setItemRef(el, index)"
       type="button"
+      role="radio"
+      :aria-checked="modelValue === item.value"
+      :tabindex="modelValue === item.value ? 0 : -1"
       :class="[
         'relative z-10 inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 font-medium whitespace-nowrap transition-all duration-150 select-none active:scale-95',
         sizeClasses[size],
@@ -155,6 +182,7 @@ onUnmounted(() => {
         !indicatorReady && modelValue === item.value ? 'bg-white shadow-xs dark:bg-zinc-700' : ''
       ]"
       @click="handleSelect(item.value)"
+      @keydown="handleKeydown($event, index)"
     >
       <component :is="item.icon" v-if="item.icon" class="h-3.5 w-3.5 shrink-0" />
       <span class="whitespace-nowrap">{{ item.label }}</span>

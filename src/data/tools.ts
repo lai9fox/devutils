@@ -246,13 +246,15 @@ export function getAllTools(): ToolMeta[] {
   return tools
 }
 
-export function searchTools(query: string): ToolMeta[] {
+export function searchTools(query: string, toolList: ToolMeta[] = tools): ToolMeta[] {
   const q = query.trim().toLowerCase()
-  if (!q) return tools
-  return tools.filter(
+  if (!q) return toolList
+  return toolList.filter(
     (tool) =>
       tool.name.toLowerCase().includes(q) ||
+      (tool.shortName ? tool.shortName.toLowerCase().includes(q) : false) ||
       tool.description.toLowerCase().includes(q) ||
-      tool.keywords.some((k) => k.toLowerCase().includes(q))
+      tool.keywords.some((k) => k.toLowerCase().includes(q)) ||
+      (tool.tags ? tool.tags.some((tag) => tag.toLowerCase().includes(q)) : false)
   )
 }

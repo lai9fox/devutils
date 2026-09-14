@@ -118,17 +118,6 @@ export interface CodeMirrorRuntime {
   foldedRanges: typeof import('@codemirror/language').foldedRanges
   linter: typeof import('@codemirror/lint').linter
   lintGutter: typeof import('@codemirror/lint').lintGutter
-  json: typeof import('@codemirror/lang-json').json
-  jsonParseLinter: typeof import('@codemirror/lang-json').jsonParseLinter
-  yaml: typeof import('@codemirror/lang-yaml').yaml
-  xml: typeof import('@codemirror/lang-xml').xml
-  csv: typeof import('./csv').csv
-  csvParseLinter: typeof import('./csv').csvParseLinter
-  javascript: typeof import('@codemirror/lang-javascript').javascript
-  java: typeof import('@codemirror/lang-java').java
-  go: typeof import('@codemirror/lang-go').go
-  rust: typeof import('@codemirror/lang-rust').rust
-  python: typeof import('@codemirror/lang-python').python
   search: typeof import('@codemirror/search').search
   searchKeymap: typeof import('@codemirror/search').searchKeymap
   openSearchPanel: typeof import('@codemirror/search').openSearchPanel

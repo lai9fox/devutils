@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { ChevronRight, ChevronDown, Copy, Check, Route } from '@lucide/vue'
+import { appendJsonPath } from '../../utils/json-format'
 
 const props = defineProps<{
   nodeKey?: string | number
@@ -105,7 +106,10 @@ function copyValue() {
       <!-- 折叠/展开箭头 (仅针对 Object / Array) -->
       <button
         v-if="isObject"
+        type="button"
         class="-ml-1 flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+        :aria-label="isExpanded ? '折叠节点' : '展开节点'"
+        :aria-expanded="isExpanded"
         @click.stop="toggleExpand"
       >
         <ChevronRight
@@ -226,7 +230,7 @@ function copyValue() {
         :key="path + '.' + k"
         :node-key="isArray ? Number(k) : k"
         :value="v"
-        :path="isArray ? `${path}[${k}]` : `${path}.${k}`"
+        :path="appendJsonPath(path, k, isArray)"
         :depth="depth + 1"
         :is-last="idx === childEntries.length - 1"
         :auto-expand-level="autoExpandLevel"

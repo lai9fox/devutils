@@ -46,10 +46,40 @@ const activeIsOpen = computed(() => {
 const query = ref('')
 const selectedIndex = ref(0)
 const inputRef = ref<HTMLInputElement | null>(null)
+const modalRef = ref<HTMLElement | null>(null)
+let triggerElement: HTMLElement | null = null
 
 const filteredTools = computed(() => {
   return searchTools(query.value)
 })
+
+function handleModalKeydown(e: KeyboardEvent) {
+  if (e.key === 'Tab') {
+    if (!modalRef.value) return
+    const focusableElements = modalRef.value.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    const focusable = Array.from(focusableElements).filter(
+      (el) => !el.hasAttribute('disabled') && el.offsetParent !== null
+    )
+    if (focusable.length === 0) return
+
+    const firstElement = focusable[0]
+    const lastElement = focusable[focusable.length - 1]
+
+    if (e.shiftKey) {
+      if (document.activeElement === firstElement) {
+        e.preventDefault()
+        lastElement.focus()
+      }
+    } else {
+      if (document.activeElement === lastElement) {
+        e.preventDefault()
+        firstElement.focus()
+      }
+    }
+  }
+}
 
 function getIconComponent(icon: string) {
   switch (icon) {
@@ -143,6 +173,9 @@ watch(query, () => {
 
 watch(activeIsOpen, (open) => {
   if (open) {
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      triggerElement = document.activeElement
+    }
     query.value = ''
     selectedIndex.value = 0
     nextTick(() => {
@@ -151,6 +184,14 @@ watch(activeIsOpen, (open) => {
         inputRef.value?.focus()
       }, 50)
     })
+  } else {
+    if (triggerElement && typeof triggerElement.focus === 'function') {
+      const elToFocus = triggerElement
+      triggerElement = null
+      nextTick(() => {
+        elToFocus.focus()
+      })
+    }
   }
 })
 
@@ -181,7 +222,12 @@ onBeforeUnmount(() => {
         @click.self="handleClose"
       >
         <div
+          ref="modalRef"
+          role="dialog"
+          aria-modal="true"
+          aria-label="命令面板"
           class="w-full max-w-xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl transition-all dark:border-zinc-800 dark:bg-zinc-900"
+          @keydown="handleModalKeydown"
         >
           <!-- 搜索输入框 -->
           <div class="flex items-center border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
@@ -190,6 +236,10 @@ onBeforeUnmount(() => {
               ref="inputRef"
               v-model="query"
               type="text"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded="true"
+              aria-label="搜索工具、功能或关键字"
               placeholder="搜索工具、功能或关键字..."
               class="w-full bg-transparent text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
             />
@@ -199,7 +249,7 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- 工具列表 -->
-          <div class="max-h-80 overflow-y-auto p-2">
+          <div role="listbox" aria-label="工具建议" class="max-h-80 overflow-y-auto p-2">
             <div v-if="filteredTools.length === 0" class="py-8 text-center text-xs text-zinc-400">
               未找到相关工具
             </div>
@@ -207,6 +257,9 @@ onBeforeUnmount(() => {
             <button
               v-for="(tool, idx) in filteredTools"
               :key="tool.id"
+              type="button"
+              role="option"
+              :aria-selected="idx === selectedIndex"
               class="flex w-full cursor-pointer items-center justify-between rounded-xl p-2.5 text-left transition-colors"
               :class="
                 idx === selectedIndex

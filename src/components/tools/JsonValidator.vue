@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import CodeEditor from '../editor/CodeEditor.vue'
 import { validateJson, type ValidationResult } from '../../utils/json-validator'
 import {
@@ -15,8 +15,10 @@ import {
   Check
 } from '@lucide/vue'
 import { UiButton, UiSplitPane } from '../ui'
+import { getToolDraft, setToolDraft } from '../../utils/toolDrafts'
 
-const inputJson = ref('')
+const inputJson = ref(getToolDraft('json-validator:input', ''))
+watch(inputJson, (val) => setToolDraft('json-validator:input', val))
 
 // 即时同步校验，无防抖延迟
 const validationResult = computed<ValidationResult | null>(() => {

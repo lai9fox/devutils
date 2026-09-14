@@ -86,7 +86,9 @@ defineEmits<{
     </div>
 
     <!-- 右侧区域：统计指标与高频快捷按钮 -->
-    <div class="flex shrink-0 items-center gap-1 text-xs">
+    <div
+      class="scrollbar-none flex max-w-[65%] shrink-0 items-center gap-1 overflow-x-auto text-xs"
+    >
       <!-- 行数与字符统计 -->
       <div
         v-if="showStats"
@@ -106,6 +108,7 @@ defineEmits<{
         type="button"
         class="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-all duration-150 hover:bg-zinc-200/60 hover:text-zinc-800 active:scale-90 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         :title="isAllFolded ? '展开全部代码' : '折叠全部代码'"
+        :aria-label="isAllFolded ? '展开全部代码' : '折叠全部代码'"
         @click="$emit('toggle-fold')"
       >
         <UnfoldVertical
@@ -126,6 +129,7 @@ defineEmits<{
             : 'text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
         "
         :title="isWrapped ? '关闭自动换行' : '开启自动换行'"
+        :aria-label="isWrapped ? '关闭自动换行' : '开启自动换行'"
         @click="$emit('toggle-wrap')"
       >
         <WrapText class="h-3.5 w-3.5" />
@@ -137,6 +141,7 @@ defineEmits<{
         type="button"
         class="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-all duration-150 hover:bg-zinc-200/60 hover:text-zinc-800 active:scale-90 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         title="搜索 (Cmd+F / Ctrl+F)"
+        aria-label="搜索 (Cmd+F / Ctrl+F)"
         @click="$emit('search')"
       >
         <Search class="h-3.5 w-3.5" />
@@ -154,6 +159,7 @@ defineEmits<{
         "
         :disabled="!hasContent"
         title="清空内容"
+        aria-label="清空内容"
         @click="hasContent ? $emit('clear') : undefined"
       >
         <Trash2 class="h-3.5 w-3.5" />
@@ -165,6 +171,7 @@ defineEmits<{
         type="button"
         class="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-all duration-150 hover:bg-zinc-200/60 hover:text-zinc-800 active:scale-90 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         title="打开本地文件"
+        aria-label="打开本地文件"
         @click="$emit('open')"
       >
         <FolderOpen class="h-3.5 w-3.5 shrink-0" />
@@ -181,6 +188,7 @@ defineEmits<{
             : 'text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
         "
         :title="copied ? '已复制到剪贴板' : '复制代码内容'"
+        :aria-label="copied ? '已复制到剪贴板' : '复制代码内容'"
         @click="$emit('copy')"
       >
         <Check v-if="copied" class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
@@ -198,6 +206,7 @@ defineEmits<{
             : 'text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
         "
         :title="downloaded ? '已开始下载' : '下载代码文件'"
+        :aria-label="downloaded ? '已开始下载' : '下载代码文件'"
         @click="$emit('download')"
       >
         <Check

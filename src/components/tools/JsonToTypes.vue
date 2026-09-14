@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import CodeEditor, { type CodeLanguage } from '../editor/CodeEditor.vue'
 import {
   jsonToTypeScript,
@@ -10,14 +10,20 @@ import {
   type JavaStyle
 } from '../../utils/type-generator'
 import { UiInput, UiSelect, UiSegmented, UiSplitPane } from '../ui'
+import { getToolDraft, setToolDraft } from '../../utils/toolDrafts'
 
 type TargetLang = 'typescript' | 'java' | 'go' | 'rust' | 'python'
 
-const inputJson = ref('')
-const selectedLang = ref<TargetLang>('typescript')
-const javaStyle = ref<JavaStyle>('pojo')
-const rootTypeName = ref('')
+const inputJson = ref(getToolDraft('json-to-types:input', ''))
+const selectedLang = ref<TargetLang>(getToolDraft('json-to-types:lang', 'typescript'))
+const javaStyle = ref<JavaStyle>(getToolDraft('json-to-types:javaStyle', 'pojo'))
+const rootTypeName = ref(getToolDraft('json-to-types:rootTypeName', ''))
 const isMobile = ref(false)
+
+watch(inputJson, (val) => setToolDraft('json-to-types:input', val))
+watch(selectedLang, (val) => setToolDraft('json-to-types:lang', val))
+watch(javaStyle, (val) => setToolDraft('json-to-types:javaStyle', val))
+watch(rootTypeName, (val) => setToolDraft('json-to-types:rootTypeName', val))
 
 function checkMobile() {
   if (typeof window !== 'undefined') {

@@ -13,6 +13,137 @@ export function createFoldMarker(open: boolean): HTMLElement {
   return span
 }
 
+interface LanguageBundle {
+  extension?: Extension
+  linter?: any
+}
+
+const languageCache = new Map<string, Promise<LanguageBundle>>()
+
+export async function loadLanguageExtension(lang?: string): Promise<LanguageBundle> {
+  const normalized = (lang || '').toLowerCase().trim()
+  if (!normalized || normalized === 'plain' || normalized === 'txt') {
+    return {}
+  }
+
+  if (languageCache.has(normalized)) {
+    return languageCache.get(normalized)!
+  }
+
+  const loadPromise = (async (): Promise<LanguageBundle> => {
+    switch (normalized) {
+      case 'json': {
+        const { json, jsonParseLinter } = await import('@codemirror/lang-json')
+        return { extension: json(), linter: jsonParseLinter() }
+      }
+      case 'yaml': {
+        const { yaml } = await import('@codemirror/lang-yaml')
+        return { extension: yaml() }
+      }
+      case 'xml': {
+        const { xml } = await import('@codemirror/lang-xml')
+        return { extension: xml() }
+      }
+      case 'csv': {
+        const { csv, csvParseLinter } = await import('./csv')
+        return { extension: csv(), linter: csvParseLinter() }
+      }
+      case 'javascript':
+      case 'js': {
+        const { javascript } = await import('@codemirror/lang-javascript')
+        return { extension: javascript({ typescript: false }) }
+      }
+      case 'typescript':
+      case 'ts': {
+        const { javascript } = await import('@codemirror/lang-javascript')
+        return { extension: javascript({ typescript: true }) }
+      }
+      case 'java': {
+        const { java } = await import('@codemirror/lang-java')
+        return { extension: java() }
+      }
+      case 'go': {
+        const { go } = await import('@codemirror/lang-go')
+        return { extension: go() }
+      }
+      case 'rust':
+      case 'rs': {
+        const { rust } = await import('@codemirror/lang-rust')
+        return { extension: rust() }
+      }
+      case 'python':
+      case 'py': {
+        const { python } = await import('@codemirror/lang-python')
+        return { extension: python() }
+      }
+      default:
+        return {}
+    }
+  })()
+
+  languageCache.set(normalized, loadPromise)
+  return loadPromise
+}
+
+let coreRuntimePromise: Promise<CodeMirrorRuntime> | null = null
+
+export async function loadCodeMirror(): Promise<CodeMirrorRuntime> {
+  if (!coreRuntimePromise) {
+    coreRuntimePromise = (async () => {
+      const [state, viewMod, commands, languageMod, lintMod, searchMod] = await Promise.all([
+        import('@codemirror/state'),
+        import('@codemirror/view'),
+        import('@codemirror/commands'),
+        import('@codemirror/language'),
+        import('@codemirror/lint'),
+        import('@codemirror/search')
+      ])
+
+      return {
+        EditorState: state.EditorState,
+        EditorView: viewMod.EditorView,
+        Compartment: state.Compartment,
+        keymap: viewMod.keymap,
+        lineNumbers: viewMod.lineNumbers,
+        highlightActiveLineGutter: viewMod.highlightActiveLineGutter,
+        highlightSpecialChars: viewMod.highlightSpecialChars,
+        drawSelection: viewMod.drawSelection,
+        dropCursor: viewMod.dropCursor,
+        rectangularSelection: viewMod.rectangularSelection,
+        crosshairCursor: viewMod.crosshairCursor,
+        placeholder: viewMod.placeholder,
+        tooltips: viewMod.tooltips,
+        history: commands.history,
+        defaultKeymap: commands.defaultKeymap,
+        historyKeymap: commands.historyKeymap,
+        indentWithTab: commands.indentWithTab,
+        bracketMatching: languageMod.bracketMatching,
+        defaultHighlightStyle: languageMod.defaultHighlightStyle,
+        indentOnInput: languageMod.indentOnInput,
+        syntaxHighlighting: languageMod.syntaxHighlighting,
+        codeFolding: languageMod.codeFolding,
+        foldGutter: languageMod.foldGutter,
+        foldKeymap: languageMod.foldKeymap,
+        foldAll: languageMod.foldAll,
+        unfoldAll: languageMod.unfoldAll,
+        foldEffect: languageMod.foldEffect,
+        unfoldEffect: languageMod.unfoldEffect,
+        foldState: languageMod.foldState,
+        foldable: languageMod.foldable,
+        foldedRanges: languageMod.foldedRanges,
+        linter: lintMod.linter,
+        lintGutter: lintMod.lintGutter,
+        search: searchMod.search,
+        searchKeymap: searchMod.searchKeymap,
+        openSearchPanel: searchMod.openSearchPanel,
+        closeSearchPanel: searchMod.closeSearchPanel,
+        highlightSelectionMatches: searchMod.highlightSelectionMatches
+      }
+    })()
+  }
+  return coreRuntimePromise
+}
+
 export function useCodeMirror(
   editorHost: Ref<HTMLElement | null>,
   props: CodeEditorProps,
@@ -26,134 +157,6 @@ export function useCodeMirror(
 
   const isWrapped = ref(Boolean(props.lineWrapping))
   const isAllFolded = ref(false)
-
-  async function loadCodeMirror(): Promise<CodeMirrorRuntime> {
-    if (runtime) return runtime
-
-    const [
-      state,
-      viewMod,
-      commands,
-      languageMod,
-      lintMod,
-      jsonLang,
-      yamlLang,
-      xmlLang,
-      jsLang,
-      searchMod,
-      csvLang,
-      javaLang,
-      goLang,
-      rustLang,
-      pythonLang
-    ] = await Promise.all([
-      import('@codemirror/state'),
-      import('@codemirror/view'),
-      import('@codemirror/commands'),
-      import('@codemirror/language'),
-      import('@codemirror/lint'),
-      import('@codemirror/lang-json'),
-      import('@codemirror/lang-yaml'),
-      import('@codemirror/lang-xml'),
-      import('@codemirror/lang-javascript'),
-      import('@codemirror/search'),
-      import('./csv'),
-      import('@codemirror/lang-java'),
-      import('@codemirror/lang-go'),
-      import('@codemirror/lang-rust'),
-      import('@codemirror/lang-python')
-    ])
-
-    runtime = {
-      EditorState: state.EditorState,
-      EditorView: viewMod.EditorView,
-      Compartment: state.Compartment,
-      keymap: viewMod.keymap,
-      lineNumbers: viewMod.lineNumbers,
-      highlightActiveLineGutter: viewMod.highlightActiveLineGutter,
-      highlightSpecialChars: viewMod.highlightSpecialChars,
-      drawSelection: viewMod.drawSelection,
-      dropCursor: viewMod.dropCursor,
-      rectangularSelection: viewMod.rectangularSelection,
-      crosshairCursor: viewMod.crosshairCursor,
-      placeholder: viewMod.placeholder,
-      tooltips: viewMod.tooltips,
-      history: commands.history,
-      defaultKeymap: commands.defaultKeymap,
-      historyKeymap: commands.historyKeymap,
-      indentWithTab: commands.indentWithTab,
-      bracketMatching: languageMod.bracketMatching,
-      defaultHighlightStyle: languageMod.defaultHighlightStyle,
-      indentOnInput: languageMod.indentOnInput,
-      syntaxHighlighting: languageMod.syntaxHighlighting,
-      codeFolding: languageMod.codeFolding,
-      foldGutter: languageMod.foldGutter,
-      foldKeymap: languageMod.foldKeymap,
-      foldAll: languageMod.foldAll,
-      unfoldAll: languageMod.unfoldAll,
-      foldEffect: languageMod.foldEffect,
-      unfoldEffect: languageMod.unfoldEffect,
-      foldState: languageMod.foldState,
-      foldable: languageMod.foldable,
-      foldedRanges: languageMod.foldedRanges,
-      linter: lintMod.linter,
-      lintGutter: lintMod.lintGutter,
-      json: jsonLang.json,
-      jsonParseLinter: jsonLang.jsonParseLinter,
-      yaml: yamlLang.yaml,
-      xml: xmlLang.xml,
-      csv: csvLang.csv,
-      csvParseLinter: csvLang.csvParseLinter,
-      javascript: jsLang.javascript,
-      java: javaLang.java,
-      go: goLang.go,
-      rust: rustLang.rust,
-      python: pythonLang.python,
-      search: searchMod.search,
-      searchKeymap: searchMod.searchKeymap,
-      openSearchPanel: searchMod.openSearchPanel,
-      closeSearchPanel: searchMod.closeSearchPanel,
-      highlightSelectionMatches: searchMod.highlightSelectionMatches
-    }
-
-    wrapCompartment = new runtime.Compartment()
-
-    return runtime
-  }
-
-  function getLanguageExtension(cm: CodeMirrorRuntime): Extension | null {
-    const lang = (props.language || '').toLowerCase()
-    if (lang === 'json') return cm.json()
-    if (lang === 'yaml') return cm.yaml()
-    if (lang === 'xml') return cm.xml()
-    if (lang === 'csv') return cm.csv()
-    if (lang === 'javascript' || lang === 'js') return cm.javascript({ typescript: false })
-    if (lang === 'typescript' || lang === 'ts') return cm.javascript({ typescript: true })
-    if (lang === 'java') return cm.java()
-    if (lang === 'go') return cm.go()
-    if (lang === 'rust' || lang === 'rs') return cm.rust()
-    if (lang === 'python' || lang === 'py') return cm.python()
-    return null
-  }
-
-  function getLintExtension(cm: CodeMirrorRuntime): Extension[] {
-    if (props.lint === false || !cm.linter) return []
-
-    const exts: Extension[] = []
-    if (cm.lintGutter) {
-      exts.push(cm.lintGutter())
-    }
-
-    const lang = (props.language || '').toLowerCase()
-    if (lang === 'json' && cm.jsonParseLinter) {
-      exts.push(cm.linter(cm.jsonParseLinter()))
-    }
-    if (lang === 'csv' && cm.csvParseLinter) {
-      exts.push(cm.linter(cm.csvParseLinter()))
-    }
-
-    return exts
-  }
 
   function unfoldRangeAndDescendants(
     editorView: EditorView,
@@ -170,7 +173,7 @@ export function useCodeMirror(
     editorView.dispatch({ effects })
   }
 
-  function buildExtensions(cm: CodeMirrorRuntime): Extension[] {
+  function buildExtensions(cm: CodeMirrorRuntime, langBundle?: LanguageBundle): Extension[] {
     const exts: Extension[] = []
 
     if (props.lineNumbers) {
@@ -327,12 +330,17 @@ export function useCodeMirror(
       ])
     )
 
-    const lang = getLanguageExtension(cm)
-    if (lang) exts.push(lang)
+    if (langBundle?.extension) {
+      exts.push(langBundle.extension)
+    }
 
-    const lintExts = getLintExtension(cm)
-    if (lintExts.length > 0) {
-      exts.push(...lintExts)
+    if (props.lint !== false && cm.linter) {
+      if (cm.lintGutter) {
+        exts.push(cm.lintGutter())
+      }
+      if (langBundle?.linter) {
+        exts.push(cm.linter(langBundle.linter))
+      }
     }
 
     exts.push(
@@ -363,8 +371,16 @@ export function useCodeMirror(
 
   async function mountEditor() {
     if (!editorHost.value || isDisposed) return
-    const cm = await loadCodeMirror()
+    const [cm, langBundle] = await Promise.all([
+      loadCodeMirror(),
+      loadLanguageExtension(props.language)
+    ])
     if (isDisposed || !editorHost.value) return
+
+    runtime = cm
+    if (!wrapCompartment) {
+      wrapCompartment = new cm.Compartment()
+    }
 
     if (view) {
       view.destroy()
@@ -375,7 +391,7 @@ export function useCodeMirror(
       parent: editorHost.value,
       state: cm.EditorState.create({
         doc: props.modelValue || '',
-        extensions: buildExtensions(cm)
+        extensions: buildExtensions(cm, langBundle)
       })
     })
 

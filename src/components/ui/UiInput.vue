@@ -70,6 +70,12 @@ defineExpose({
 })
 </script>
 
+<script lang="ts">
+export default {
+  inheritAttrs: false
+}
+</script>
+
 <template>
   <div class="relative flex w-full items-center">
     <div
@@ -81,6 +87,7 @@ defineExpose({
 
     <input
       ref="inputRef"
+      v-bind="$attrs"
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"

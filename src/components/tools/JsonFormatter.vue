@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import CodeEditor from '../editor/CodeEditor.vue'
 import { repairJson } from '../../utils/json-repair'
+import { formatJson, minifyJson, isValidJson } from '../../utils/json-format'
 import { AlignLeft, Minimize2, Wrench } from '@lucide/vue'
 import { UiButton, UiSegmented, message } from '../ui'
+import { getToolDraft, setToolDraft } from '../../utils/toolDrafts'
 
-const content = ref('')
-const indentSize = ref<number | 'tab'>(2)
+const content = ref(getToolDraft('json-formatter:content', ''))
+const indentSize = ref<number | 'tab'>(getToolDraft('json-formatter:indent', 2))
 
-function getIndent(): string | number {
-  return indentSize.value === 'tab' ? '\t' : Number(indentSize.value)
-}
+watch(content, (val) => setToolDraft('json-formatter:content', val))
+watch(indentSize, (val) => setToolDraft('json-formatter:indent', val))
 
 function handleFormat(showToast = true) {
   if (!content.value.trim()) {
@@ -20,24 +21,25 @@ function handleFormat(showToast = true) {
     return
   }
 
-  try {
-    const parsed = JSON.parse(content.value)
-    content.value = JSON.stringify(parsed, null, getIndent())
+  // 1. 如果本身是有效 JSON，使用无损格式化（不转换大整数、高精度小数）
+  if (isValidJson(content.value)) {
+    content.value = formatJson(content.value, { indent: indentSize.value })
     if (showToast) {
       message.success('格式化成功')
     }
-  } catch (err) {
-    const { repaired, changed } = repairJson(content.value)
-    try {
-      const parsed = JSON.parse(repaired)
-      content.value = JSON.stringify(parsed, null, getIndent())
-      if (showToast) {
-        message.info(changed ? '检测到非标准语法，已自动容错修复并完成格式化' : '格式化成功')
-      }
-    } catch {
-      if (showToast) {
-        message.error(`解析错误: ${(err as Error).message}`)
-      }
+    return
+  }
+
+  // 2. 尝试容错修复
+  const { repaired, changed, success, error } = repairJson(content.value)
+  if (success && isValidJson(repaired)) {
+    content.value = formatJson(repaired, { indent: indentSize.value })
+    if (showToast) {
+      message.info(changed ? '检测到非标准语法，已自动容错修复并完成格式化' : '格式化成功')
+    }
+  } else {
+    if (showToast) {
+      message.error(`解析错误: ${error || 'JSON 语法错误'}`)
     }
   }
 }
@@ -48,19 +50,18 @@ function handleMinify() {
     return
   }
 
-  try {
-    const parsed = JSON.parse(content.value)
-    content.value = JSON.stringify(parsed)
+  if (isValidJson(content.value)) {
+    content.value = minifyJson(content.value)
     message.success('压缩单行成功')
-  } catch {
-    const { repaired } = repairJson(content.value)
-    try {
-      const parsed = JSON.parse(repaired)
-      content.value = JSON.stringify(parsed)
-      message.info('已自动修复语法并完成单行压缩')
-    } catch (e) {
-      message.error(`压缩失败: ${(e as Error).message}`)
-    }
+    return
+  }
+
+  const { repaired, success, error } = repairJson(content.value)
+  if (success && isValidJson(repaired)) {
+    content.value = minifyJson(repaired)
+    message.info('已自动修复语法并完成单行压缩')
+  } else {
+    message.error(`压缩失败: ${error || 'JSON 语法错误'}`)
   }
 }
 
@@ -69,10 +70,16 @@ function handleRepair() {
     message.warning('请输入或粘贴 JSON 内容')
     return
   }
-  const { repaired, changed } = repairJson(content.value)
-  content.value = repaired
+
+  const { repaired, changed, success, error } = repairJson(content.value)
+  if (!success) {
+    message.error(`修复失败: ${error || '无法解析或修复此内容'}`)
+    return
+  }
+
+  content.value = formatJson(repaired, { indent: indentSize.value })
   if (changed) {
-    message.success('成功修复单引号、键名缺失引号及尾随逗号')
+    message.success('成功修复非标准语法（单引号、键名缺少引号、尾随逗号等）')
   } else {
     message.info('当前内容无需修复或已符合标准语法')
   }

@@ -22,17 +22,26 @@ import {
 
 type CodecMode = 'auto' | 'encode' | 'decode' | 'hex'
 
-const mode = ref<CodecMode>('auto')
-const urlSafe = ref(false)
-const padding = ref(true)
-const lineBreak = ref<Base64LineBreak>('none')
-const hexUppercase = ref(false)
+import { getToolDraft, setToolDraft } from '../../utils/toolDrafts'
 
-const sourceContent = ref('')
+const mode = ref<CodecMode>(getToolDraft('base64-text:mode', 'auto'))
+const urlSafe = ref(getToolDraft('base64-text:urlSafe', false))
+const padding = ref(getToolDraft('base64-text:padding', true))
+const lineBreak = ref<Base64LineBreak>(getToolDraft('base64-text:lineBreak', 'none'))
+const hexUppercase = ref(getToolDraft('base64-text:hexUppercase', false))
+
+const sourceContent = ref(getToolDraft('base64-text:source', ''))
 const targetContent = ref('')
 const detectedType = ref<string>('')
 const errorMessage = ref<string>('')
 const wasUrlDecoded = ref(false)
+
+watch(mode, (val) => setToolDraft('base64-text:mode', val))
+watch(urlSafe, (val) => setToolDraft('base64-text:urlSafe', val))
+watch(padding, (val) => setToolDraft('base64-text:padding', val))
+watch(lineBreak, (val) => setToolDraft('base64-text:lineBreak', val))
+watch(hexUppercase, (val) => setToolDraft('base64-text:hexUppercase', val))
+watch(sourceContent, (val) => setToolDraft('base64-text:source', val))
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 

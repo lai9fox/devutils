@@ -4,6 +4,8 @@
  * 格式校验、MIME 识别与文件还原等高阶能力。
  */
 
+import { getMimeTypeByExtension } from './mime'
+
 export type Base64LineBreak = 'none' | 64 | 76
 
 export interface EncodeOptions {
@@ -192,7 +194,7 @@ export function base64ToText(input: string): DecodeResult {
  * 十六进制 Hex 转 Base64
  */
 export function hexToBase64(hex: string, options: EncodeOptions = {}): string {
-  const cleanHex = hex.replace(/[\s\r\n0x]/g, '')
+  const cleanHex = hex.replace(/(^|[^a-fA-F0-9])0x/gi, '$1').replace(/[\s,:\-_]/g, '')
   if (cleanHex.length % 2 !== 0) {
     throw new Error('Hex 字符串长度必须为偶数')
   }
@@ -391,33 +393,11 @@ export function detectMimeFromBytes(
   }
 
   // 按照文件名后缀兜底推断
-  const mimeMap: Record<string, string> = {
-    png: 'image/png',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    gif: 'image/gif',
-    webp: 'image/webp',
-    svg: 'image/svg+xml',
-    ico: 'image/x-icon',
-    bmp: 'image/bmp',
-    avif: 'image/avif',
-    pdf: 'application/pdf',
-    zip: 'application/zip',
-    json: 'application/json',
-    xml: 'application/xml',
-    txt: 'text/plain',
-    html: 'text/html',
-    css: 'text/css',
-    js: 'text/javascript',
-    ts: 'text/plain',
-    mp3: 'audio/mpeg',
-    wav: 'audio/wav',
-    mp4: 'video/mp4',
-    webm: 'video/webm'
-  }
-
-  if (extFromFilename && mimeMap[extFromFilename]) {
-    return { mime: mimeMap[extFromFilename], ext: extFromFilename }
+  if (extFromFilename) {
+    const mime = getMimeTypeByExtension(extFromFilename, '')
+    if (mime) {
+      return { mime, ext: extFromFilename }
+    }
   }
 
   return { mime: 'application/octet-stream', ext: 'bin' }

@@ -1,67 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch } from 'vue'
 import CodeEditor from '../editor/CodeEditor.vue'
 import JsonTreeNode from './JsonTreeNode.vue'
 import { Columns2, ListTree, AlertCircle, UnfoldVertical, FoldVertical, Layers } from '@lucide/vue'
-import { UiSegmented, message } from '../ui'
+import { UiSegmented, UiSplitPane, message } from '../ui'
+import { appendJsonPath } from '../../utils/json-format'
+import { getToolDraft, setToolDraft } from '../../utils/toolDrafts'
 
-const rawInput = ref('')
-const viewMode = ref<'split' | 'tree'>('split')
+const rawInput = ref(getToolDraft('json-viewer:input', ''))
+const viewMode = ref<'split' | 'tree'>(getToolDraft('json-viewer:mode', 'split'))
+
+watch(rawInput, (val) => setToolDraft('json-viewer:input', val))
+watch(viewMode, (val) => setToolDraft('json-viewer:mode', val))
 const currentPath = ref<string>('$')
 const currentValue = ref<unknown>(null)
 
 // 跟踪展开的节点路径 Set
 const expandedSet = ref<Set<string>>(new Set(['$']))
 const activeLevel = ref<number | 'all' | 0 | null>(null)
-
-// 拖拽宽度调整
-const splitPercent = ref(50)
-const isDragging = ref(false)
-const splitPaneRef = ref<HTMLElement | null>(null)
-const isDesktop = ref(true)
-
-function updateIsDesktop() {
-  if (typeof window !== 'undefined') {
-    isDesktop.value = window.innerWidth >= 1024
-  }
-}
-
-function startResize(e: MouseEvent) {
-  e.preventDefault()
-  isDragging.value = true
-  document.body.style.cursor = 'col-resize'
-  document.body.style.userSelect = 'none'
-
-  const onMouseMove = (moveEvent: MouseEvent) => {
-    if (!splitPaneRef.value) return
-    const rect = splitPaneRef.value.getBoundingClientRect()
-    const offsetX = moveEvent.clientX - rect.left
-    const percent = (offsetX / rect.width) * 100
-    splitPercent.value = Math.min(80, Math.max(20, Math.round(percent * 10) / 10))
-  }
-
-  const onMouseUp = () => {
-    isDragging.value = false
-    document.body.style.cursor = ''
-    document.body.style.userSelect = ''
-    window.removeEventListener('mousemove', onMouseMove)
-    window.removeEventListener('mouseup', onMouseUp)
-  }
-
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', onMouseUp)
-}
-
-onMounted(() => {
-  updateIsDesktop()
-  window.addEventListener('resize', updateIsDesktop)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateIsDesktop)
-  document.body.style.cursor = ''
-  document.body.style.userSelect = ''
-})
 
 // 解析后的 JSON
 const parseResult = computed(() => {
@@ -87,10 +43,10 @@ function expandAll() {
     if (node === null || typeof node !== 'object') return
     allPaths.add(path)
     if (Array.isArray(node)) {
-      node.forEach((item, idx) => collect(item, `${path}[${idx}]`))
+      node.forEach((item, idx) => collect(item, appendJsonPath(path, idx, true)))
     } else {
       for (const [key, val] of Object.entries(node as Record<string, unknown>)) {
-        collect(val, `${path}.${key}`)
+        collect(val, appendJsonPath(path, key))
       }
     }
   }
@@ -114,11 +70,15 @@ function expandToLevel(level: number) {
     if (currentDepth <= level) {
       targetPaths.add(path)
     }
-    if (Array.isArray(node)) {
-      node.forEach((item, idx) => collect(item, `${path}[${idx}]`, currentDepth + 1))
-    } else {
-      for (const [key, val] of Object.entries(node as Record<string, unknown>)) {
-        collect(val, `${path}.${key}`, currentDepth + 1)
+    if (currentDepth < level) {
+      if (Array.isArray(node)) {
+        node.forEach((item, idx) =>
+          collect(item, appendJsonPath(path, idx, true), currentDepth + 1)
+        )
+      } else {
+        for (const [key, val] of Object.entries(node as Record<string, unknown>)) {
+          collect(val, appendJsonPath(path, key), currentDepth + 1)
+        }
       }
     }
   }
@@ -197,19 +157,9 @@ async function copyText(text: string, type: 'path' | 'value' = 'path') {
       </div>
     </div>
 
-    <!-- 主展示工作区：小屏模式下上下两栏平分剩余高度 (flex-1) -->
-    <div
-      ref="splitPaneRef"
-      class="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-2.5 lg:flex-row lg:gap-0"
-      :class="{ 'select-none': isDragging }"
-    >
-      <!-- 左侧源 JSON 编辑器 (仅在 split 双栏模式显示，小屏平分高度) -->
-      <div
-        v-if="viewMode === 'split'"
-        class="flex min-h-[160px] min-w-0 flex-1 flex-col lg:h-full lg:min-h-0 lg:flex-none"
-        :style="isDesktop ? { width: `calc(${splitPercent}% - 5px)` } : {}"
-        :class="{ 'pointer-events-none': isDragging }"
-      >
+    <!-- 主展示工作区 -->
+    <UiSplitPane v-if="viewMode === 'split'" class="min-h-0 flex-1">
+      <template #left>
         <CodeEditor
           v-model="rawInput"
           title="JSON 源码"
@@ -218,140 +168,236 @@ async function copyText(text: string, type: 'path' | 'value' = 'path') {
           clearable
           placeholder="在此粘贴或输入 JSON 代码..."
         />
-      </div>
-
-      <!-- 分割拖拽条 (仅双栏模式且在桌面端显示) -->
-      <div
-        v-if="viewMode === 'split'"
-        class="group relative z-10 hidden w-2.5 shrink-0 cursor-col-resize items-center justify-center transition-colors select-none hover:bg-emerald-500/10 active:bg-emerald-500/20 lg:flex"
-        :class="{ 'bg-emerald-500/20': isDragging }"
-        title="拖拽调整两栏宽度 (双击恢复 50%)"
-        @mousedown="startResize"
-        @dblclick="splitPercent = 50"
-      >
+      </template>
+      <template #right>
         <div
-          class="h-8 w-1 rounded-full bg-zinc-300 transition-all group-hover:bg-emerald-500 group-active:bg-emerald-500 dark:bg-zinc-700"
-          :class="{ 'h-12 bg-emerald-500': isDragging }"
-        />
-      </div>
-
-      <!-- 右侧交互树形视图 (或单栏全宽树形，小屏平分高度) -->
-      <div
-        class="flex h-full min-h-[160px] min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs lg:min-h-0 dark:border-zinc-800 dark:bg-[#121215]"
-        :class="{ 'pointer-events-none': isDragging }"
-      >
-        <!-- 树形顶部工具栏 (全部换成图标，无冗余文字文案，高度与编辑器头部严格一致 h-[42px]) -->
-        <div
-          class="box-border flex h-[42px] shrink-0 items-center justify-between gap-2 border-b border-zinc-200/80 bg-zinc-50/80 px-2.5 backdrop-blur-xs select-none sm:px-3 dark:border-zinc-800/80 dark:bg-[#18181d]"
+          class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-[#121215]"
         >
-          <!-- 左侧：标题 -->
+          <!-- 树形顶部工具栏 (全部换成图标，无冗余文字文案，高度与编辑器头部严格一致 h-[42px]) -->
           <div
-            class="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200"
+            class="box-border flex h-[42px] shrink-0 items-center justify-between gap-2 border-b border-zinc-200/80 bg-zinc-50/80 px-2.5 backdrop-blur-xs select-none sm:px-3 dark:border-zinc-800/80 dark:bg-[#18181d]"
           >
-            <ListTree class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            <span class="truncate">交互式结构树</span>
-          </div>
-
-          <!-- 右侧：展开全部、全部折叠与展开层级快捷操作 (纯图标按钮组) -->
-          <div class="flex items-center gap-1.5">
-            <!-- 展开 / 折叠图标按钮组 -->
+            <!-- 左侧：标题 -->
             <div
-              class="inline-flex items-center rounded-lg border border-zinc-200/60 bg-zinc-200/60 p-0.5 dark:border-zinc-700/60 dark:bg-zinc-800/80"
+              class="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200"
             >
-              <button
-                type="button"
-                class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-colors"
-                :class="
-                  activeLevel === 'all'
-                    ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
-                    : 'text-zinc-600 hover:bg-white hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white'
-                "
-                title="全部展开"
-                @click="expandAll"
-              >
-                <UnfoldVertical class="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-colors"
-                :class="
-                  activeLevel === 0
-                    ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
-                    : 'text-zinc-600 hover:bg-white hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white'
-                "
-                title="全部折叠"
-                @click="collapseAll"
-              >
-                <FoldVertical class="h-3.5 w-3.5" />
-              </button>
+              <ListTree class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span class="truncate">交互式结构树</span>
             </div>
 
-            <!-- 层级快捷展开控制 (纯图标与纯数字，无文字文案) -->
-            <div
-              class="inline-flex items-center rounded-lg border border-zinc-200/60 bg-zinc-200/60 p-0.5 dark:border-zinc-700/60 dark:bg-zinc-800/80"
-            >
+            <!-- 右侧：展开全部、全部折叠与展开层级快捷操作 (纯图标按钮组) -->
+            <div class="flex items-center gap-1.5">
+              <!-- 展开 / 折叠图标按钮组 -->
               <div
-                class="flex items-center justify-center p-1 text-zinc-400 dark:text-zinc-500"
-                title="展开至指定层级"
+                class="inline-flex items-center rounded-lg border border-zinc-200/60 bg-zinc-200/60 p-0.5 dark:border-zinc-700/60 dark:bg-zinc-800/80"
               >
-                <Layers class="h-3.5 w-3.5" />
+                <button
+                  type="button"
+                  class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-colors"
+                  :class="
+                    activeLevel === 'all'
+                      ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
+                      : 'text-zinc-600 hover:bg-white hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white'
+                  "
+                  title="全部展开"
+                  @click="expandAll"
+                >
+                  <UnfoldVertical class="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-colors"
+                  :class="
+                    activeLevel === 0
+                      ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
+                      : 'text-zinc-600 hover:bg-white hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white'
+                  "
+                  title="全部折叠"
+                  @click="collapseAll"
+                >
+                  <FoldVertical class="h-3.5 w-3.5" />
+                </button>
               </div>
-              <button
-                v-for="lvl in [1, 2, 3, 4]"
-                :key="lvl"
-                type="button"
-                class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md font-mono text-xs font-semibold transition-colors"
-                :class="
-                  activeLevel === lvl
-                    ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
-                    : 'text-zinc-600 hover:bg-white/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-700/50 dark:hover:text-white'
-                "
-                :title="`展开至第 ${lvl} 层`"
-                @click="expandToLevel(lvl)"
+
+              <!-- 层级快捷展开控制 (纯图标与纯数字，无文字文案) -->
+              <div
+                class="inline-flex items-center rounded-lg border border-zinc-200/60 bg-zinc-200/60 p-0.5 dark:border-zinc-700/60 dark:bg-zinc-800/80"
               >
-                {{ lvl }}
-              </button>
+                <div
+                  class="flex items-center justify-center p-1 text-zinc-400 dark:text-zinc-500"
+                  title="展开至指定层级"
+                >
+                  <Layers class="h-3.5 w-3.5" />
+                </div>
+                <button
+                  v-for="lvl in [1, 2, 3, 4]"
+                  :key="lvl"
+                  type="button"
+                  class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md font-mono text-xs font-semibold transition-colors"
+                  :class="
+                    activeLevel === lvl
+                      ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
+                      : 'text-zinc-600 hover:bg-white/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-700/50 dark:hover:text-white'
+                  "
+                  :title="`展开至第 ${lvl} 层`"
+                  @click="expandToLevel(lvl)"
+                >
+                  {{ lvl }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 树容器面板：撑满高度并自适应滚动 -->
+          <div class="relative min-h-0 w-full flex-1 overflow-auto p-3 sm:p-4">
+            <!-- 空状态提示 -->
+            <div
+              v-if="parseResult.empty"
+              class="flex h-full min-h-[160px] flex-col items-center justify-center py-12 text-center text-zinc-400"
+            >
+              <ListTree class="mb-2 h-8 w-8 text-zinc-300 dark:text-zinc-700" />
+              <p class="text-xs">暂无 JSON 数据，请在编辑器中输入或粘贴 JSON 代码</p>
+            </div>
+
+            <!-- 语法错误提示 -->
+            <div
+              v-else-if="!parseResult.valid"
+              class="flex h-full min-h-[160px] flex-col items-center justify-center py-12 text-center"
+            >
+              <AlertCircle class="mb-2 h-8 w-8 text-amber-500" />
+              <h4 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                无法解析为有效 JSON 结构树
+              </h4>
+              <p class="mt-1 max-w-md font-mono text-xs text-zinc-400">
+                {{ parseResult.error }}
+              </p>
+            </div>
+
+            <!-- 树结构根节点渲染 -->
+            <div v-else class="min-w-fit">
+              <JsonTreeNode
+                :value="parseResult.data"
+                path="$"
+                :depth="0"
+                :expanded-set="expandedSet"
+                @select-path="handleSelectPath"
+                @toggle-expand="handleToggleExpand"
+                @copy-text="copyText"
+              />
             </div>
           </div>
         </div>
+      </template>
+    </UiSplitPane>
 
-        <!-- 树容器面板：撑满高度并自适应滚动 -->
-        <div class="relative min-h-0 w-full flex-1 overflow-auto p-3 sm:p-4">
-          <!-- 空状态提示 -->
+    <!-- 单栏全宽树形模式 -->
+    <div
+      v-else
+      class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-[#121215]"
+    >
+      <!-- 树形顶部工具栏 -->
+      <div
+        class="box-border flex h-[42px] shrink-0 items-center justify-between gap-2 border-b border-zinc-200/80 bg-zinc-50/80 px-2.5 backdrop-blur-xs select-none sm:px-3 dark:border-zinc-800/80 dark:bg-[#18181d]"
+      >
+        <div
+          class="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200"
+        >
+          <ListTree class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <span class="truncate">交互式结构树</span>
+        </div>
+
+        <div class="flex items-center gap-1.5">
           <div
-            v-if="parseResult.empty"
-            class="flex h-full min-h-[160px] flex-col items-center justify-center py-12 text-center text-zinc-400"
+            class="inline-flex items-center rounded-lg border border-zinc-200/60 bg-zinc-200/60 p-0.5 dark:border-zinc-700/60 dark:bg-zinc-800/80"
           >
-            <ListTree class="mb-2 h-8 w-8 text-zinc-300 dark:text-zinc-700" />
-            <p class="text-xs">暂无 JSON 数据，请在编辑器中输入或粘贴 JSON 代码</p>
+            <button
+              type="button"
+              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-colors"
+              :class="
+                activeLevel === 'all'
+                  ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
+                  : 'text-zinc-600 hover:bg-white hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white'
+              "
+              title="全部展开"
+              @click="expandAll"
+            >
+              <UnfoldVertical class="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-colors"
+              :class="
+                activeLevel === 0
+                  ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
+                  : 'text-zinc-600 hover:bg-white hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white'
+              "
+              title="全部折叠"
+              @click="collapseAll"
+            >
+              <FoldVertical class="h-3.5 w-3.5" />
+            </button>
           </div>
 
-          <!-- 语法错误提示 -->
           <div
-            v-else-if="!parseResult.valid"
-            class="flex h-full min-h-[160px] flex-col items-center justify-center py-12 text-center"
+            class="inline-flex items-center rounded-lg border border-zinc-200/60 bg-zinc-200/60 p-0.5 dark:border-zinc-700/60 dark:bg-zinc-800/80"
           >
-            <AlertCircle class="mb-2 h-8 w-8 text-amber-500" />
-            <h4 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-              无法解析为有效 JSON 结构树
-            </h4>
-            <p class="mt-1 max-w-md font-mono text-xs text-zinc-400">
-              {{ parseResult.error }}
-            </p>
+            <div
+              class="flex items-center justify-center p-1 text-zinc-400 dark:text-zinc-500"
+              title="展开至指定层级"
+            >
+              <Layers class="h-3.5 w-3.5" />
+            </div>
+            <button
+              v-for="lvl in [1, 2, 3, 4]"
+              :key="lvl"
+              type="button"
+              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md font-mono text-xs font-semibold transition-colors"
+              :class="
+                activeLevel === lvl
+                  ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400'
+                  : 'text-zinc-600 hover:bg-white/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-700/50 dark:hover:text-white'
+              "
+              :title="`展开至第 ${lvl} 层`"
+              @click="expandToLevel(lvl)"
+            >
+              {{ lvl }}
+            </button>
           </div>
+        </div>
+      </div>
 
-          <!-- 树结构根节点渲染 -->
-          <div v-else class="min-w-fit">
-            <JsonTreeNode
-              :value="parseResult.data"
-              path="$"
-              :depth="0"
-              :expanded-set="expandedSet"
-              @select-path="handleSelectPath"
-              @toggle-expand="handleToggleExpand"
-              @copy-text="copyText"
-            />
-          </div>
+      <div class="relative min-h-0 w-full flex-1 overflow-auto p-3 sm:p-4">
+        <div
+          v-if="parseResult.empty"
+          class="flex h-full min-h-[160px] flex-col items-center justify-center py-12 text-center text-zinc-400"
+        >
+          <ListTree class="mb-2 h-8 w-8 text-zinc-300 dark:text-zinc-700" />
+          <p class="text-xs">暂无 JSON 数据，请在编辑器中输入或粘贴 JSON 代码</p>
+        </div>
+
+        <div
+          v-else-if="!parseResult.valid"
+          class="flex h-full min-h-[160px] flex-col items-center justify-center py-12 text-center"
+        >
+          <AlertCircle class="mb-2 h-8 w-8 text-amber-500" />
+          <h4 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            无法解析为有效 JSON 结构树
+          </h4>
+          <p class="mt-1 max-w-md font-mono text-xs text-zinc-400">
+            {{ parseResult.error }}
+          </p>
+        </div>
+
+        <div v-else class="min-w-fit">
+          <JsonTreeNode
+            :value="parseResult.data"
+            path="$"
+            :depth="0"
+            :expanded-set="expandedSet"
+            @select-path="handleSelectPath"
+            @toggle-expand="handleToggleExpand"
+            @copy-text="copyText"
+          />
         </div>
       </div>
     </div>
