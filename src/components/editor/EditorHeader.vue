@@ -142,13 +142,19 @@ defineEmits<{
         <Search class="h-3.5 w-3.5" />
       </button>
 
-      <!-- 清空按钮 -->
+      <!-- 清空按钮 (常驻展示，无内容时置灰禁用，避免按钮动态出现导致抖动) -->
       <button
-        v-if="clearable && !readonly && hasContent"
+        v-if="clearable !== false && !readonly"
         type="button"
-        class="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-all duration-150 hover:bg-red-50 hover:text-red-600 active:scale-90 dark:text-zinc-400 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+        class="rounded-md p-1.5 transition-all duration-150 select-none"
+        :class="
+          hasContent
+            ? 'cursor-pointer text-zinc-500 hover:bg-rose-50 hover:text-rose-600 active:scale-90 dark:text-zinc-400 dark:hover:bg-rose-950/50 dark:hover:text-rose-400'
+            : 'cursor-not-allowed text-zinc-400 opacity-35 dark:text-zinc-600'
+        "
+        :disabled="!hasContent"
         title="清空内容"
-        @click="$emit('clear')"
+        @click="hasContent ? $emit('clear') : undefined"
       >
         <Trash2 class="h-3.5 w-3.5" />
       </button>

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Search, Moon, Sun, Command, Terminal } from '@lucide/vue'
 import { UiButton } from '../ui'
 import CommandPalette from './CommandPalette.vue'
 import { useTheme } from '../../composables/useTheme'
 import { useCommandPalette } from '../../composables/useCommandPalette'
+import { isMac } from '../../utils/platform'
 
 const props = withDefaults(
   defineProps<{
@@ -19,8 +20,13 @@ const emit = defineEmits<{
   'select-tool': [path: string]
 }>()
 
+const isMacPlatform = ref(false)
 const { isDark, toggleTheme } = useTheme()
 const { open: openCommandPalette } = useCommandPalette()
+
+onMounted(() => {
+  isMacPlatform.value = isMac()
+})
 
 function handlePaletteSelect(path: string) {
   if (props.variant === 'workspace') {
@@ -34,19 +40,24 @@ function handlePaletteSelect(path: string) {
 <template>
   <!-- 工作台模式：紧凑且将所有操作聚合在工具名称右侧 -->
   <div v-if="variant === 'workspace'" class="flex shrink-0 items-center gap-1.5 sm:gap-2">
-    <!-- 搜索工具快捷键图标 (移动端展示放大镜图标，桌面端展示 ⌘K 组合键) -->
+    <!-- 搜索工具快捷键图标 (移动端展示放大镜图标，桌面端展示快捷键) -->
     <button
       type="button"
       class="inline-flex h-8 shrink-0 cursor-pointer items-center justify-center gap-1 overflow-hidden rounded-lg border border-zinc-200/90 bg-zinc-100/70 px-2 font-mono text-xs font-medium text-zinc-600 shadow-none transition-all duration-200 ease-out hover:bg-zinc-200/70 hover:text-zinc-900 active:scale-95 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
       style="view-transition-name: devutils-search-trigger"
-      title="快速搜索工具 (⌘K)"
+      :title="isMacPlatform ? '快速搜索工具 (⌘K)' : '快速搜索工具 (Ctrl+K)'"
       aria-label="快速搜索工具快捷键"
       @click="openCommandPalette"
     >
       <Search class="h-4 w-4 shrink-0 text-zinc-500 sm:hidden dark:text-zinc-400" />
-      <span class="hidden shrink-0 items-center gap-1 sm:inline-flex">
-        <Command class="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
-        <span class="text-[11px] font-semibold">K</span>
+      <span class="hidden shrink-0 items-center sm:inline-flex">
+        <span class="shortcut-mac items-center gap-1">
+          <Command class="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
+          <span class="text-[11px] font-semibold">K</span>
+        </span>
+        <span class="shortcut-win items-center">
+          <span class="text-[11px] font-semibold">Ctrl K</span>
+        </span>
       </span>
     </button>
 
@@ -107,15 +118,21 @@ function handlePaletteSelect(path: string) {
       size="sm"
       class="inline-flex items-center text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
       style="view-transition-name: devutils-search-trigger"
+      :title="isMacPlatform ? '快速搜索工具 (⌘K)' : '快速搜索工具 (Ctrl+K)'"
       @click="openCommandPalette"
     >
       <Search class="h-3.5 w-3.5" />
       <span class="hidden sm:inline">搜索工具...</span>
       <kbd
-        class="ml-1 hidden items-center gap-0.5 rounded bg-zinc-200 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600 sm:ml-2 sm:inline-flex dark:bg-zinc-800 dark:text-zinc-400"
+        class="ml-1 hidden items-center rounded bg-zinc-200 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600 sm:ml-2 sm:inline-flex dark:bg-zinc-800 dark:text-zinc-400"
       >
-        <Command class="h-2.5 w-2.5" />
-        <span>K</span>
+        <span class="shortcut-mac items-center gap-0.5">
+          <Command class="h-2.5 w-2.5" />
+          <span>K</span>
+        </span>
+        <span class="shortcut-win items-center">
+          <span>Ctrl K</span>
+        </span>
       </kbd>
     </UiButton>
 

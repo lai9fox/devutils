@@ -313,6 +313,21 @@ onBeforeUnmount(() => {
           示例文件 (PDF)
         </UiButton>
 
+        <!-- 清空按钮 (紧跟示例文件右边) -->
+        <UiButton
+          variant="danger-hover"
+          :disabled="!currentFileName && !base64Content"
+          title="清空当前文件与 Base64 内容"
+          @click="handleClear"
+        >
+          <template #prefix>
+            <Trash2
+              class="h-3.5 w-3.5 text-zinc-400 transition-colors group-hover:text-rose-500 dark:group-hover:text-rose-400"
+            />
+          </template>
+          清空
+        </UiButton>
+
         <div class="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
 
         <!-- 格式控制 -->
@@ -350,35 +365,9 @@ onBeforeUnmount(() => {
           />
         </div>
       </div>
-
-      <div class="flex items-center gap-1.5">
-        <!-- 清空 -->
-        <UiButton
-          variant="ghost"
-          size="sm"
-          :disabled="!currentFileName && !base64Content"
-          @click="handleClear"
-        >
-          <template #prefix>
-            <Trash2 class="h-3.5 w-3.5 text-zinc-400" />
-          </template>
-          清空
-        </UiButton>
-      </div>
     </div>
 
-    <!-- 大文件温馨提示 -->
-    <div
-      v-if="isLargeFileWarning"
-      class="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
-    >
-      <AlertCircle class="h-4 w-4 shrink-0" />
-      <span
-        >提示：该文件较大，生成超长文本可能会占用较多内存，推荐直接点击“下载还原文件”进行传输与存储。</span
-      >
-    </div>
-
-    <!-- 双栏工作台 -->
+    <!-- 双栏工作台：紧接 Header，零多余外置元素，杜绝抖动 -->
     <UiSplitPane>
       <!-- 左栏：文件拖拽区与详细元信息卡片 -->
       <template #left>
@@ -403,6 +392,15 @@ onBeforeUnmount(() => {
           <div class="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
             <!-- 激活状态：文件卡片 -->
             <div v-if="currentFileName || base64Content" class="space-y-4">
+              <!-- 大文件提示 (置于卡片内，不抖动外层) -->
+              <div
+                v-if="isLargeFileWarning"
+                class="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
+              >
+                <AlertCircle class="h-4 w-4 shrink-0" />
+                <span>文件较大，推荐直接点击“下载还原文件”进行传输与保存。</span>
+              </div>
+
               <!-- 文件摘要卡片 -->
               <div
                 class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/60"

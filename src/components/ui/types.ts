@@ -1,5 +1,13 @@
 export type ButtonVariant =
-  'primary' | 'secondary' | 'ghost' | 'danger' | 'warning' | 'warning-solid' | 'success' | 'outline'
+  | 'primary'
+  | 'secondary'
+  | 'ghost'
+  | 'danger'
+  | 'danger-hover'
+  | 'warning'
+  | 'warning-solid'
+  | 'success'
+  | 'outline'
 
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm' | 'icon-lg'
 

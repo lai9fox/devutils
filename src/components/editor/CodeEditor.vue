@@ -41,7 +41,7 @@ const props = withDefaults(defineProps<CodeEditorProps>(), {
   showWrap: true,
   showSearch: true,
   showStats: true,
-  clearable: false,
+  clearable: true,
   class: ''
 })
 

@@ -33,6 +33,8 @@ const variantClasses: Record<ButtonVariant, string> = {
     'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:bg-zinc-200 dark:active:bg-zinc-700',
   danger:
     'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 active:bg-red-100 dark:active:bg-red-900/40',
+  'danger-hover':
+    'border border-transparent bg-zinc-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 active:bg-rose-100 dark:bg-zinc-800 dark:hover:bg-rose-950/50 dark:hover:text-rose-400 dark:hover:border-rose-900/60 text-zinc-700 dark:text-zinc-300',
   warning:
     'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/50',
   'warning-solid': 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white shadow-xs',
@@ -53,7 +55,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 }
 
 const computedClasses = computed(() => [
-  'inline-flex items-center justify-center transition-all duration-150 select-none cursor-pointer whitespace-nowrap shrink-0',
+  'group inline-flex items-center justify-center transition-all duration-150 select-none cursor-pointer whitespace-nowrap shrink-0',
   props.size.startsWith('icon') ? 'active:scale-90' : 'active:scale-[0.98]',
   variantClasses[props.variant],
   sizeClasses[props.size],

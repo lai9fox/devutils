@@ -75,6 +75,164 @@ function isProbableBase64(input: string): boolean {
   return res.success && res.text.length > 0
 }
 
+const isInputHex = computed(() => {
+  const input = sourceContent.value.trim()
+  return /^[0-9a-fA-F\s]+$/.test(input) && !input.includes('=') && input.length >= 2
+})
+
+// 动态推断左侧（输入）类型与视觉徽标
+const currentInputInfo = computed(() => {
+  const input = sourceContent.value.trim()
+  if (!input) {
+    if (mode.value === 'auto') {
+      return {
+        title: '输入内容',
+        typeLabel: '自动检测',
+        badgeClass:
+          'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700'
+      }
+    }
+    if (mode.value === 'encode') {
+      return {
+        title: '输入文本 (UTF-8)',
+        typeLabel: 'UTF-8 文本',
+        badgeClass:
+          'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60'
+      }
+    }
+    if (mode.value === 'decode') {
+      return {
+        title: '待解码 Base64',
+        typeLabel: 'Base64 密文',
+        badgeClass:
+          'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60'
+      }
+    }
+    return {
+      title: '输入源 (Hex 或 Base64)',
+      typeLabel: 'Hex / Base64',
+      badgeClass:
+        'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60'
+    }
+  }
+
+  if (mode.value === 'auto') {
+    if (isProbableBase64(input)) {
+      const isUrlSafe = input.includes('-') || input.includes('_')
+      return {
+        title: '输入 Base64',
+        typeLabel: isUrlSafe ? 'Base64URL' : 'Base64 密文',
+        badgeClass:
+          'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60'
+      }
+    }
+    return {
+      title: '输入文本',
+      typeLabel: 'UTF-8 文本',
+      badgeClass:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60'
+    }
+  }
+
+  if (mode.value === 'encode') {
+    return {
+      title: '输入文本',
+      typeLabel: 'UTF-8 文本',
+      badgeClass:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60'
+    }
+  }
+
+  if (mode.value === 'decode') {
+    const isUrlSafe = input.includes('-') || input.includes('_')
+    return {
+      title: '待解码 Base64',
+      typeLabel: isUrlSafe ? 'Base64URL' : 'Base64 密文',
+      badgeClass:
+        'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60'
+    }
+  }
+
+  // hex 模式
+  if (isInputHex.value) {
+    return {
+      title: '输入 Hex',
+      typeLabel: 'Hex 十六进制',
+      badgeClass:
+        'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60'
+    }
+  }
+  return {
+    title: '输入 Base64',
+    typeLabel: 'Base64 密文',
+    badgeClass:
+      'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60'
+  }
+})
+
+// 动态推断右侧（输出）类型与视觉徽标
+const currentOutputInfo = computed(() => {
+  const input = sourceContent.value.trim()
+  if (!input) {
+    return {
+      title: '转换输出',
+      typeLabel: '',
+      badgeClass: ''
+    }
+  }
+
+  if (mode.value === 'auto') {
+    if (isProbableBase64(input)) {
+      return {
+        title: '解码结果',
+        typeLabel: 'UTF-8 文本',
+        badgeClass:
+          'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60'
+      }
+    }
+    return {
+      title: 'Base64 结果',
+      typeLabel: urlSafe.value ? 'Base64URL' : 'Base64 密文',
+      badgeClass:
+        'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60'
+    }
+  }
+
+  if (mode.value === 'encode') {
+    return {
+      title: 'Base64 结果',
+      typeLabel: urlSafe.value ? 'Base64URL' : 'Base64 密文',
+      badgeClass:
+        'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60'
+    }
+  }
+
+  if (mode.value === 'decode') {
+    return {
+      title: '解码结果',
+      typeLabel: 'UTF-8 文本',
+      badgeClass:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60'
+    }
+  }
+
+  // hex 模式
+  if (isInputHex.value) {
+    return {
+      title: 'Base64 结果',
+      typeLabel: urlSafe.value ? 'Base64URL' : 'Base64 密文',
+      badgeClass:
+        'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60'
+    }
+  }
+  return {
+    title: 'Hex 结果',
+    typeLabel: 'Hex 十六进制',
+    badgeClass:
+      'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60'
+  }
+})
+
 function executeConversion() {
   const input = sourceContent.value.trim()
   errorMessage.value = ''
@@ -94,8 +252,8 @@ function executeConversion() {
         if (decoded.success) {
           targetContent.value = decoded.text
           detectedType.value = decoded.isUrlSafe
-            ? '已自动识别为 Base64URL 并解码'
-            : '已自动识别为 Base64 并解码'
+            ? '已识别 Base64URL ➔ 解码为文本'
+            : '已识别 Base64 ➔ 解码为文本'
           wasUrlDecoded.value = Boolean(decoded.wasUrlEncoded)
           return
         }
@@ -106,26 +264,28 @@ function executeConversion() {
         padding: padding.value,
         lineBreak: lineBreak.value
       })
-      detectedType.value = '自动作为 UTF-8 文本编码为 Base64'
+      detectedType.value = urlSafe.value ? '文本 ➔ 编码为 Base64URL' : '文本 ➔ 编码为 Base64'
     } else if (mode.value === 'encode') {
       targetContent.value = textToBase64(sourceContent.value, {
         urlSafe: urlSafe.value,
         padding: padding.value,
         lineBreak: lineBreak.value
       })
+      detectedType.value = urlSafe.value ? '文本 ➔ Base64URL' : '文本 ➔ Base64'
     } else if (mode.value === 'decode') {
       const decoded = base64ToText(input)
       if (decoded.success) {
         targetContent.value = decoded.text
         wasUrlDecoded.value = Boolean(decoded.wasUrlEncoded)
+        detectedType.value = decoded.isUrlSafe ? 'Base64URL ➔ 解码文本' : 'Base64 ➔ 解码文本'
       } else {
         targetContent.value = ''
         errorMessage.value = decoded.error || '非法 Base64 格式'
       }
     } else if (mode.value === 'hex') {
       // 十六进制模式
-      const isHexInput = /^[0-9a-fA-F\s]+$/.test(input) && !input.includes('=')
-      if (isHexInput) {
+      const isHex = isInputHex.value
+      if (isHex) {
         // Hex -> Base64
         targetContent.value = hexToBase64(input, {
           urlSafe: urlSafe.value,
@@ -228,7 +388,7 @@ onBeforeUnmount(() => {
         <UiButton
           variant="secondary"
           class="shrink-0"
-          title="交换输入输出内容"
+          title="交换两边内容"
           :disabled="!sourceContent && !targetContent"
           @click="handleSwap"
         >
@@ -236,6 +396,29 @@ onBeforeUnmount(() => {
             <ArrowLeftRight class="h-3.5 w-3.5 text-emerald-500" />
           </template>
           交换
+        </UiButton>
+
+        <!-- 示例数据 -->
+        <UiButton variant="secondary" title="载入示例数据" @click="loadSample">
+          <template #prefix>
+            <Sparkles class="h-3.5 w-3.5 text-emerald-500" />
+          </template>
+          示例
+        </UiButton>
+
+        <!-- 清空按钮 -->
+        <UiButton
+          variant="danger-hover"
+          :disabled="!sourceContent && !targetContent"
+          title="清空所有输入与输出"
+          @click="handleClear"
+        >
+          <template #prefix>
+            <Trash2
+              class="h-3.5 w-3.5 text-zinc-400 transition-colors group-hover:text-rose-500 dark:group-hover:text-rose-400"
+            />
+          </template>
+          清空
         </UiButton>
 
         <div class="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
@@ -290,56 +473,16 @@ onBeforeUnmount(() => {
         </UiCheckbox>
       </div>
 
-      <div class="flex items-center gap-1.5">
-        <!-- 示例数据 -->
-        <UiButton variant="ghost" size="sm" @click="loadSample">
-          <template #prefix>
-            <Sparkles class="h-3.5 w-3.5 text-emerald-500" />
-          </template>
-          示例
-        </UiButton>
-
-        <!-- 清空 -->
-        <UiButton variant="ghost" size="sm" :disabled="!sourceContent" @click="handleClear">
-          <template #prefix>
-            <Trash2 class="h-3.5 w-3.5 text-zinc-400" />
-          </template>
-          清空
-        </UiButton>
-      </div>
-    </div>
-
-    <!-- 诊断提示条 (错误/智能检测通知/URL转义提示) -->
-    <div
-      v-if="errorMessage"
-      class="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
-    >
-      <AlertCircle class="h-4 w-4 shrink-0" />
-      <span class="font-medium">{{ errorMessage }}</span>
-    </div>
-
-    <div
-      v-else-if="detectedType || wasUrlDecoded"
-      class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200/70 bg-emerald-50/60 px-3 py-1.5 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300"
-    >
-      <div class="flex items-center gap-2">
-        <CheckCircle2 class="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-        <span>{{ detectedType }}</span>
+      <!-- 右侧：无错误时展示极简体积对比 -->
+      <div
+        v-if="expansionStats && !errorMessage"
+        class="hidden items-center gap-2 font-mono text-[11px] text-zinc-400 sm:flex dark:text-zinc-500"
+      >
+        <span>{{ formatBytes(inputByteLength) }}</span>
+        <ArrowRight class="h-3 w-3 text-zinc-300 dark:text-zinc-600" />
+        <span>{{ formatBytes(outputByteLength) }}</span>
         <span
-          v-if="wasUrlDecoded"
-          class="rounded bg-emerald-100/80 px-1.5 py-0.5 text-[10px] text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200"
-        >
-          已兼容还原 URL 转义字符 (%2B, %2F, %3D)
-        </span>
-      </div>
-
-      <!-- 体积与膨胀比微型统计 -->
-      <div v-if="expansionStats" class="flex items-center gap-2 font-mono text-[11px] opacity-85">
-        <span>输入: {{ formatBytes(inputByteLength) }}</span>
-        <ArrowRight class="h-3 w-3" />
-        <span>输出: {{ formatBytes(outputByteLength) }}</span>
-        <span
-          class="rounded px-1 text-[10px]"
+          class="rounded px-1.5 py-0.5 text-[10px] font-semibold"
           :class="
             expansionStats.ratio > 0
               ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
@@ -351,35 +494,80 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- 双栏工作台 -->
+    <!-- 双栏工作台：高度撑满，双侧清晰呈现当前类型标签，彻底避免混淆 -->
     <UiSplitPane>
+      <!-- 左栏：输入源与自适应类型指示 -->
       <template #left>
         <CodeEditor
           v-model="sourceContent"
-          :title="
-            mode === 'decode'
-              ? '待解码 Base64'
-              : mode === 'hex'
-                ? '输入源 (Hex 或 Base64)'
-                : '输入文本 (UTF-8)'
-          "
+          :title="currentInputInfo.title"
           language="plain"
           filename="base64-input.txt"
-          clearable
           placeholder="在此输入或粘贴需要处理的内容，支持中文、Emoji 与特殊字符..."
-        />
+        >
+          <template #header-left>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                {{ currentInputInfo.title }}
+              </span>
+              <span
+                class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                :class="currentInputInfo.badgeClass"
+              >
+                {{ currentInputInfo.typeLabel }}
+              </span>
+            </div>
+          </template>
+        </CodeEditor>
       </template>
 
+      <!-- 右栏：转换输出与自适应类型指示 -->
       <template #right>
         <CodeEditor
           :model-value="targetContent"
-          :title="mode === 'decode' ? '解码文本' : mode === 'hex' ? '转换输出' : 'Base64 结果'"
+          :title="currentOutputInfo.title"
           language="plain"
           filename="base64-output.txt"
           readonly
           :lint="false"
-          placeholder="转换结果将在此实时呈现..."
-        />
+          :placeholder="errorMessage || '转换结果将在此实时呈现...'"
+        >
+          <template #header-left>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                {{ currentOutputInfo.title }}
+              </span>
+
+              <!-- 输出类型 Badge -->
+              <span
+                v-if="!errorMessage && currentOutputInfo.typeLabel"
+                class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                :class="currentOutputInfo.badgeClass"
+              >
+                {{ currentOutputInfo.typeLabel }}
+              </span>
+
+              <!-- 错误告警 Badge -->
+              <span
+                v-if="errorMessage"
+                class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-medium text-rose-600 dark:bg-rose-950/50 dark:text-rose-300"
+                :title="errorMessage"
+              >
+                <AlertCircle class="h-3 w-3 shrink-0" />
+                <span class="max-w-44 truncate">{{ errorMessage }}</span>
+              </span>
+
+              <!-- 转换动作说明 Badge -->
+              <span
+                v-else-if="detectedType && sourceContent"
+                class="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+              >
+                <CheckCircle2 class="h-3 w-3 shrink-0 text-emerald-500" />
+                <span class="max-w-48 truncate">{{ detectedType }}</span>
+              </span>
+            </div>
+          </template>
+        </CodeEditor>
       </template>
     </UiSplitPane>
   </div>

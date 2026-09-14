@@ -176,3 +176,18 @@ input.focus\:outline-none:focus-visible {
 .animate-fade-in {
   animation: fadeIn 0.12s ease-out;
 }
+
+/* 操作系统专属快捷键无闪烁自适应显示控制 */
+.shortcut-mac,
+.shortcut-win {
+  display: none !important;
+}
+
+html.is-mac .shortcut-mac {
+  display: inline-flex !important;
+}
+
+html.is-not-mac .shortcut-win,
+html:not(.is-mac):not(.is-not-mac) .shortcut-win {
+  display: inline-flex !important;
+}

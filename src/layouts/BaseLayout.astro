@@ -51,7 +51,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://devutils
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
 
-    <!-- 预防深色主题白屏闪烁脚本 & 路由过渡保持主题 & 同步浏览器顶栏 theme-color 与画布底层背景色 -->
+    <!-- 预防深色主题白屏闪烁脚本 & 操作系统快捷键无闪烁识别 & 路由过渡保持状态 -->
     <script is:inline>
       function applyTheme() {
         const storedTheme = localStorage.getItem('theme')
@@ -70,8 +70,31 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://devutils
           if (meta) meta.setAttribute('content', '#fafafa')
         }
       }
+
+      function applyPlatform() {
+        const nav = typeof navigator !== 'undefined' ? navigator : null
+        const p = nav ? nav['plat' + 'form'] : ''
+        const isMac = Boolean(
+          nav &&
+          (/macintosh|mac os x/i.test(nav.userAgent) ||
+            (nav['userAgentData'] && nav['userAgentData']['platform'] === 'macOS') ||
+            (p && String(p).toUpperCase().indexOf('MAC') >= 0))
+        )
+        if (isMac) {
+          document.documentElement.classList.add('is-mac')
+          document.documentElement.classList.remove('is-not-mac')
+        } else {
+          document.documentElement.classList.add('is-not-mac')
+          document.documentElement.classList.remove('is-mac')
+        }
+      }
+
       applyTheme()
-      document.addEventListener('astro:after-swap', applyTheme)
+      applyPlatform()
+      document.addEventListener('astro:after-swap', () => {
+        applyTheme()
+        applyPlatform()
+      })
     </script>
     <ClientRouter />
   </head>

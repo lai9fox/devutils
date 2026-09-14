@@ -11,7 +11,8 @@ import {
   Copy,
   Check,
   Trash2,
-  Sparkles
+  Sparkles,
+  Command
 } from '@lucide/vue'
 import { UiButton, UiSegmented, UiSplitPane, message } from '../ui'
 import {
@@ -24,8 +25,10 @@ import {
   calculateExpansionRatio
 } from '../../utils/base64'
 import { triggerFileDownload } from '../../utils/file-download'
+import { isMac } from '../../utils/platform'
 
 // 基础状态
+const isMacPlatform = ref(false)
 const imageSrc = ref<string>('')
 const base64Code = ref<string>('')
 const outputFormat = ref<'data-url' | 'pure-base64'>('data-url')
@@ -330,6 +333,7 @@ watch(outputFormat, (fmt) => {
 })
 
 onMounted(() => {
+  isMacPlatform.value = isMac()
   window.addEventListener('paste', handlePaste)
 })
 
@@ -372,6 +376,21 @@ onBeforeUnmount(() => {
           示例图片
         </UiButton>
 
+        <!-- 清空按钮 (紧跟示例图片右边) -->
+        <UiButton
+          variant="danger-hover"
+          :disabled="!imageSrc && !base64Code"
+          title="清空当前图片与 Base64 内容"
+          @click="handleClear"
+        >
+          <template #prefix>
+            <Trash2
+              class="h-3.5 w-3.5 text-zinc-400 transition-colors group-hover:text-rose-500 dark:group-hover:text-rose-400"
+            />
+          </template>
+          清空
+        </UiButton>
+
         <div class="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
 
         <!-- Base64 格式模式选择 (Data URL vs 纯 Base64) -->
@@ -401,67 +420,8 @@ onBeforeUnmount(() => {
         </UiButton>
       </div>
 
-      <div class="flex items-center gap-1.5">
-        <!-- 清空 -->
-        <UiButton
-          variant="ghost"
-          size="sm"
-          :disabled="!imageSrc && !base64Code"
-          @click="handleClear"
-        >
-          <template #prefix>
-            <Trash2 class="h-3.5 w-3.5 text-zinc-400" />
-          </template>
-          清空
-        </UiButton>
-      </div>
-    </div>
-
-    <!-- 顶部状态与导出快捷条 (当有图片时展示) -->
-    <div
-      v-if="imageSrc"
-      class="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-zinc-200/90 bg-white/90 px-3.5 py-2 text-xs backdrop-blur-xs dark:border-zinc-800/90 dark:bg-zinc-900/90"
-    >
-      <!-- 图片信息徽章 -->
-      <div class="flex flex-wrap items-center gap-2 text-zinc-600 dark:text-zinc-300">
-        <span
-          class="rounded-md border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
-        >
-          {{ mimeType }}
-        </span>
-
-        <span
-          v-if="imageDimensions"
-          class="rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 font-mono text-[11px] dark:border-zinc-700 dark:bg-zinc-800"
-        >
-          {{ imageDimensions.width }} × {{ imageDimensions.height }} px
-        </span>
-
-        <span class="text-zinc-400">|</span>
-
-        <span
-          >原图: <b>{{ formatBytes(originalFileSize) }}</b></span
-        >
-        <span
-          >Base64: <b>{{ formatBytes(base64Length) }}</b></span
-        >
-
-        <span
-          v-if="expansionInfo"
-          class="rounded px-1.5 py-0.5 text-[10px] font-medium"
-          :class="
-            expansionInfo.ratio > 0
-              ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-              : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-          "
-          :title="`Base64 膨胀了 ${formatBytes(expansionInfo.diff)}`"
-        >
-          +{{ expansionInfo.ratio }}%
-        </span>
-      </div>
-
-      <!-- 快速复制代码片段按钮组 -->
-      <div class="flex flex-wrap items-center gap-1.5">
+      <!-- 右侧：快捷复制代码片段 (并入 header 右侧，彻底移除原下方突兀的浮动条) -->
+      <div v-if="imageSrc" class="flex flex-wrap items-center gap-1.5">
         <button
           type="button"
           class="inline-flex cursor-pointer items-center gap-1 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 text-[11px] font-medium text-zinc-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700 active:scale-95 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-300"
@@ -489,7 +449,7 @@ onBeforeUnmount(() => {
         >
           <Check v-if="copiedSnippet === 'HTML 标签'" class="h-3 w-3 text-emerald-500" />
           <Copy v-else class="h-3 w-3 text-zinc-400" />
-          &lt;img&gt; 标签
+          &lt;img&gt;
         </button>
 
         <button
@@ -499,12 +459,12 @@ onBeforeUnmount(() => {
         >
           <Check v-if="copiedSnippet === 'CSS 代码'" class="h-3 w-3 text-emerald-500" />
           <Copy v-else class="h-3 w-3 text-zinc-400" />
-          CSS 背景
+          CSS
         </button>
       </div>
     </div>
 
-    <!-- 双栏工作台：左侧图片预览与拖拽上传，右侧 Base64 编辑器 -->
+    <!-- 双栏工作台：紧接 Header，零多余外置元素，杜绝抖动 -->
     <UiSplitPane>
       <!-- 左栏：预览与上传区域 -->
       <template #left>
@@ -514,16 +474,44 @@ onBeforeUnmount(() => {
           @dragleave="handleDragLeave"
           @drop="handleDrop"
         >
-          <!-- 预览区顶部微型工具栏 -->
+          <!-- 预览区顶部微型工具栏 (内置图片元信息与缩放控制) -->
           <div
             class="flex h-10 shrink-0 items-center justify-between border-b border-zinc-200/80 bg-zinc-50/50 px-3 select-none dark:border-zinc-800/80 dark:bg-zinc-900/40"
           >
-            <span
-              class="flex items-center gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200"
-            >
-              <ImageIcon class="h-3.5 w-3.5 text-emerald-500" />
-              图片预览与画布
-            </span>
+            <div class="flex min-w-0 items-center gap-2 overflow-hidden">
+              <span
+                class="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200"
+              >
+                <ImageIcon class="h-3.5 w-3.5 text-emerald-500" />
+                图片预览
+              </span>
+
+              <!-- 图片信息元标签：尺寸、MIME、膨胀比直接在左栏头部展示 -->
+              <div
+                v-if="imageSrc"
+                class="flex min-w-0 items-center gap-1.5 overflow-hidden text-[11px]"
+              >
+                <span
+                  class="py-0.2 rounded bg-emerald-100/70 px-1.5 font-mono font-medium text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                >
+                  {{ mimeType }}
+                </span>
+                <span v-if="imageDimensions" class="font-mono text-zinc-500 dark:text-zinc-400">
+                  {{ imageDimensions.width }}×{{ imageDimensions.height }}
+                </span>
+                <span
+                  v-if="expansionInfo"
+                  class="py-0.2 rounded px-1 font-mono text-[10px]"
+                  :class="
+                    expansionInfo.ratio > 0
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                      : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                  "
+                >
+                  +{{ expansionInfo.ratio }}%
+                </span>
+              </div>
+            </div>
 
             <div v-if="imageSrc" class="flex items-center gap-1">
               <button
@@ -610,9 +598,16 @@ onBeforeUnmount(() => {
                 <p class="mt-1 text-xs text-zinc-400">
                   支持 PNG、JPG、WebP、SVG、GIF，也可直接使用
                   <kbd
-                    class="rounded bg-zinc-200 px-1 py-0.5 font-mono text-[10px] dark:bg-zinc-800"
-                    >Ctrl+V</kbd
+                    class="inline-flex items-center rounded bg-zinc-200 px-1.5 py-0.5 font-mono text-[10px] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                   >
+                    <span class="shortcut-mac items-center gap-0.5">
+                      <Command class="h-2.5 w-2.5" />
+                      <span>V</span>
+                    </span>
+                    <span class="shortcut-win items-center">
+                      <span>Ctrl + V</span>
+                    </span>
+                  </kbd>
                   粘贴剪贴板截图
                 </p>
               </div>
